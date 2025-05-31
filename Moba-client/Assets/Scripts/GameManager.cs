@@ -91,11 +91,6 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Subscription applied!");
         OnSubscriptionApplied?.Invoke();
-
-        foreach(var champ in ctx.Db.ChampionStats.Iter())
-        {
-            Debug.Log($"{champ.Name} iterated");
-        }
     }
 
 

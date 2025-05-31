@@ -21,8 +21,8 @@ public static partial class Module
         public uint entity_id;
         //public uint statblock_id;
         public float rotation;
-        //public float currentHealth;
-        //public float max_health;
+        public float currentHealth;
+        public float max_health;
     }
 
     [Table(Name = "walking", Public = true)]
@@ -144,6 +144,8 @@ public static partial class Module
             {
                 entity_id = walker.entity_id,
                 rotation = finalRotation,
+                currentHealth = 4f,
+                max_health = 5f
             });
 
             DbVector2 newLastPos = entity.position;
