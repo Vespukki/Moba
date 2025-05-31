@@ -1,8 +1,9 @@
 using SpacetimeDB;
-using UnityEngine;
 using SpacetimeDB.Types;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,7 +17,7 @@ public class GameManager : MonoBehaviour
     public static Identity LocalIdentity { get; private set; }
     public static DbConnection Conn { get; private set; }
 
-    public Dictionary<int, ChampionController> championInstances = new();
+    public Dictionary<uint, ChampionController> championInstances = new();
 
     private void Start()
     {
@@ -55,6 +56,11 @@ public class GameManager : MonoBehaviour
         conn.Db.ChampionInstance.OnInsert += ChampionInstanceOnInsert;
         conn.Db.Player.OnInsert += PlayerOnInsert;
         conn.Db.ChampionInstance.OnUpdate += ChampionInstanceOnUpdate;
+        conn.Db.Entity.OnUpdate += EntityOnUpdate;
+        conn.Db.Actor.OnUpdate += ActorOnUpdate;
+        conn.Db.Walking.OnDelete += WalkingOnDelete;
+        conn.Db.Walking.OnUpdate += WalkingOnUpdate;
+        conn.Db.Walking.OnInsert += WalkingOnInsert;
 
         OnConnected?.Invoke();
 
@@ -64,7 +70,22 @@ public class GameManager : MonoBehaviour
             .SubscribeToAllTables();
     }
 
-  
+
+    private void ActorOnUpdate(EventContext context, Actor oldRow, Actor newRow)
+    {
+        if (championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
+        {
+            champController.UpdateActor(newRow);
+        }
+    }
+
+    private void EntityOnUpdate(EventContext context, Entity oldRow, Entity newRow)
+    {
+        if (championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
+        {
+            champController.UpdateEntity(newRow);
+        }
+    }
 
     private void HandleSubscriptionApplied(SubscriptionEventContext ctx)
     {
@@ -94,7 +115,10 @@ public class GameManager : MonoBehaviour
 
     private void ChampionInstanceOnInsert(EventContext ctx, ChampionInstance champ)
     {
-        championInstances.Add(champ.InstanceId, PrefabManager.SpawnChampion(champ));
+        Entity entity = ctx.Db.Entity.EntityId.Find(champ.EntityId);
+        Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
+
+        championInstances.Add(champ.EntityId, PrefabManager.SpawnChampion(entity, actor, champ));
         Debug.Log("CHAMPION CREATED");
     }
 
@@ -110,9 +134,35 @@ public class GameManager : MonoBehaviour
 
     private void ChampionInstanceOnUpdate(EventContext context, ChampionInstance oldRow, ChampionInstance newRow)
     {
-        if(championInstances.TryGetValue(oldRow.InstanceId, out ChampionController champController))
+        if(championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
         {
             champController.UpdateChampion(newRow);
+        }
+    }
+
+    private void WalkingOnUpdate(EventContext context, Walking oldRow, Walking newRow)
+    {
+        if (championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
+        {
+            champController.UpdateWalker(newRow);
+        }
+    }
+
+    private void WalkingOnDelete(EventContext context, Walking row)
+    {
+        if (championInstances.TryGetValue(row.EntityId, out ChampionController champController))
+        {
+            var entity = context.Db.Entity.EntityId.Find(row.EntityId);
+            var pos = entity.Position;
+            champController.UpdateWalker(new(entity.EntityId, entity.Position));
+        }
+    }
+
+    private void WalkingOnInsert(EventContext ctx, Walking row)
+    {
+        if (championInstances.TryGetValue(row.EntityId, out ChampionController champController))
+        {
+            champController.UpdateWalker(row);
         }
     }
 }

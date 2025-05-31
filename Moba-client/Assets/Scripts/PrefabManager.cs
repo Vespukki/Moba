@@ -27,11 +27,11 @@ public class PrefabManager : MonoBehaviour
         return playerController;
     }
 
-    public static ChampionController SpawnChampion(ChampionInstance champ)
+    public static ChampionController SpawnChampion(Entity entity, Actor actor, ChampionInstance champ)
     {
         var champController = Instantiate(Instance.ChampionPrefab);
         champController.name = $"ChampionController - {champ.ChampId}";
-        champController.Initialize(champ);
+        champController.Initialize(entity, actor, champ);
         return champController;
     }
 }

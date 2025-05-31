@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class ChampionController : MonoBehaviour
 {
-    int instanceId;
+    uint instanceId;
     [SerializeField] private float positionLerpSpeed = 1f;
 
     Animator animator;
 
-    const float LERP_TIME = .1f;
     const float SNAP_DIST = 1000f;
 
     [SerializeField] protected float maxRotation = 10;
@@ -60,7 +59,7 @@ public class ChampionController : MonoBehaviour
         }
         transform.position = Vector3.Lerp(transform.position + transformExtra, lerpTarget, lerpTimer);
 
-        float velocity = (lastFramePosition - transform.position).magnitude;
+        float velocity = (transform.position- lastFramePosition).magnitude;
         if (animator != null)
         {
             animator.SetFloat("Speed", velocity);
@@ -79,12 +78,13 @@ public class ChampionController : MonoBehaviour
         //transform.rotation = Quaternion.Euler(transform.rotation.x, Quaternion.LookRotation(direction).eulerAngles.y, transform.rotation.z);
     }
 
-    internal void Initialize(ChampionInstance champ)
+    internal void Initialize(Entity entity, Actor actor, ChampionInstance champ)
     {
-        instanceId = champ.InstanceId;
-        transform.position = (Vector2)champ.Position;
+        instanceId = champ.EntityId;
+        transform.position = (Vector2)entity.Position;
         lastFramePosition = transform.position;
-        lerpTarget = (Vector2)champ.Position;
+        lerpTarget = (Vector2)entity.Position;
+        rotationLerpTarget = actor.Rotation;
     }
 
     public Vector3 DbPositionToWorldPosition(DbVector2 dbVector, float height)
@@ -95,9 +95,21 @@ public class ChampionController : MonoBehaviour
     internal void UpdateChampion(ChampionInstance newChamp)
     {
         Debug.Log("Champ update");
+    }
+
+    internal void UpdateActor(Actor newActor)
+    {
+        rotationLerpTarget = newActor.Rotation;
+    }
+
+    internal void UpdateEntity(Entity newEntity)
+    {
         lerpTimer = 0;
-        lerpTarget = DbPositionToWorldPosition(newChamp.Position, transform.position.y);
-        targetPos = DbPositionToWorldPosition(newChamp.TargetWalkPos, transform.position.y);
-        rotationLerpTarget = newChamp.Rotation;
+        lerpTarget = DbPositionToWorldPosition(newEntity.Position, transform.position.y);
+    }
+
+    internal void UpdateWalker(Walking newWalker)
+    {
+        targetPos = DbPositionToWorldPosition(newWalker.TargetWalkPos, transform.position.y);
     }
 }

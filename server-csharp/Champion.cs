@@ -1,0 +1,80 @@
+﻿using SpacetimeDB;
+
+public static partial class Module
+{
+    [Table(Name = "champion_stats", Public = true)]
+    public partial struct ChampionStats
+    {
+        [PrimaryKey, Unique]
+        public string champ_id;
+        public string name;
+        public int base_ad;
+    }
+
+
+
+    [Table(Name = "champion_instance", Public = true)]
+    public partial struct ChampionInstance
+    {
+        [PrimaryKey, Unique]
+        public uint entity_id;
+
+        public string champ_id;
+
+        [SpacetimeDB.Index.BTree]
+        public uint player_id;
+
+
+    }
+
+    [Reducer]
+    public static void AddChampion(ReducerContext ctx, string id, int base_ad, string name)
+    {
+        ctx.Db.champion_stats.Insert(new ChampionStats
+        {
+            champ_id = id,
+            base_ad = base_ad,
+            name = name
+
+        });
+    }
+
+    [Reducer]
+    public static void CreateChampionInstance(ReducerContext ctx, ChampionInstance champ)
+    {
+        var newEntity = ctx.Db.entity.Insert(new Entity() 
+        {
+            entity_id = 0, //auto increments
+            position = new(0,0),
+            last_position = new(0,0),
+        });
+
+
+
+        var newActor = ctx.Db.actor.Insert(new Actor()
+        {
+            entity_id = newEntity.entity_id,
+        });
+
+        ChampionInstance newChamp = new()
+        {
+            player_id = champ.player_id,
+            champ_id = champ.champ_id,
+            entity_id = newEntity.entity_id
+        };
+        Log.Info($"Entity id of new champ is {newEntity.entity_id}");
+        
+        
+        ctx.Db.champion_instance.Insert(newChamp);
+    }
+
+    [Reducer]
+    public static void DeleteChampionInstance(ReducerContext ctx, ChampionInstance champ)
+    {
+        uint entityID = champ.entity_id;
+        ctx.Db.champion_instance.entity_id.Delete(entityID);
+        ctx.Db.actor.entity_id.Delete(entityID);
+        ctx.Db.entity.entity_id.Delete(entityID);
+    }
+
+}
