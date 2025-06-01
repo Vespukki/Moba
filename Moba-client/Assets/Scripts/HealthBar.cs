@@ -1,6 +1,7 @@
 using SpacetimeDB.Types;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class HealthBar : MonoBehaviour
 {
@@ -20,7 +21,18 @@ public class HealthBar : MonoBehaviour
 
     public GameObject greenPart;
 
-    private void Update()
+    private void Awake()
+    {
+        float width = GetComponent<RectTransform>().rect.width;
+        float height = GetComponent<RectTransform>().rect.height;
+
+
+        greenPart.transform.position = new(transform.position.x, transform.position.y, transform.position.z);
+
+        fullLength = (1 - GetComponent<RectTransform>().pivot.x) * width;
+    }
+
+    private void Update()   
     {
         
     }
