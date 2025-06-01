@@ -54,6 +54,9 @@ public static partial class Module
         var newActor = ctx.Db.actor.Insert(new Actor()
         {
             entity_id = newEntity.entity_id,
+            max_health = 2000f,
+            current_health = 1000f,
+            rotation = 0
         });
 
         ChampionInstance newChamp = new()

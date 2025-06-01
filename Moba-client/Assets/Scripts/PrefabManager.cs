@@ -5,7 +5,7 @@ public class PrefabManager : MonoBehaviour
 {
     public static PrefabManager Instance;
     public PlayerController PlayerPrefab;
-    public ChampionController ChampionPrefab;
+    public GameObject ChampionPrefab;
 
     private void Start()
     {
@@ -29,7 +29,7 @@ public class PrefabManager : MonoBehaviour
 
     public static ChampionController SpawnChampion(Entity entity, Actor actor, ChampionInstance champ)
     {
-        var champController = Instantiate(Instance.ChampionPrefab);
+        var champController = Instantiate(Instance.ChampionPrefab).GetComponentInChildren<ChampionController>();
         champController.name = $"ChampionController - {champ.ChampId}";
         champController.Initialize(entity, actor, champ);
         return champController;

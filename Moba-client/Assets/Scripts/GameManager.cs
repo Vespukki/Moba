@@ -53,11 +53,13 @@ public class GameManager : MonoBehaviour
         LocalIdentity = identity;
 
         conn.Db.ChampionStats.OnInsert += ChampionStatsOnInsert;
-        conn.Db.ChampionInstance.OnInsert += ChampionInstanceOnInsert;
         conn.Db.Player.OnInsert += PlayerOnInsert;
+        conn.Db.Player.OnDelete += PlayerOnDelete;
+        conn.Db.ChampionInstance.OnInsert += ChampionInstanceOnInsert;
         conn.Db.ChampionInstance.OnUpdate += ChampionInstanceOnUpdate;
         conn.Db.Entity.OnUpdate += EntityOnUpdate;
         conn.Db.Actor.OnUpdate += ActorOnUpdate;
+        conn.Db.Actor.OnInsert += ActorOnInsert;
         conn.Db.Walking.OnDelete += WalkingOnDelete;
         conn.Db.Walking.OnUpdate += WalkingOnUpdate;
         conn.Db.Walking.OnInsert += WalkingOnInsert;
@@ -70,6 +72,19 @@ public class GameManager : MonoBehaviour
             .SubscribeToAllTables();
     }
 
+    private void PlayerOnDelete(EventContext context, Player row)
+    {
+        Debug.Log("Player deleted");
+    }
+    private void ActorOnInsert(EventContext context, Actor row)
+    {
+        if (championInstances.TryGetValue(row.EntityId, out ChampionController champController))
+        {
+            champController.UpdateActor(row);
+            Debug.Log("actor on Insert");
+        }
+        
+    }
 
     private void ActorOnUpdate(EventContext context, Actor oldRow, Actor newRow)
     {
@@ -77,6 +92,8 @@ public class GameManager : MonoBehaviour
         {
             champController.UpdateActor(newRow);
         }
+
+        
     }
 
     private void EntityOnUpdate(EventContext context, Entity oldRow, Entity newRow)
@@ -119,6 +136,7 @@ public class GameManager : MonoBehaviour
 
     private void PlayerOnInsert(EventContext ctx, Player player)
     {
+        Debug.Log($"Spawning player: {player.PlayerId}");
         PrefabManager.SpawnPlayer(player);
     }
 

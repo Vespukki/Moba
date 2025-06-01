@@ -3,23 +3,32 @@ using UnityEngine;
 
 public class ActorController : EntityController
 {
-    public float maxHealth;
-    public float currentHealth;
-
     protected float rotationLerpTarget;
-    
+
+    [SerializeField] protected GameObject healthBarPrefab;
+    private HealthBar healthBar;
+    [SerializeField] Transform healthBarTarget;
 
     Animator animator;
     [SerializeField] protected float maxRotation = 10;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        animator = GetComponent<Animator>();
+    }
+
     protected override void Start()
     {
         base.Start();
-        animator = GetComponent<Animator>();
+        
     }
 
     public void UpdateActor(Actor newActor)
     {
         rotationLerpTarget = newActor.Rotation;
+
+        healthBar.UpdateHealth(newActor);
     }
 
     public void Initialize(Entity entity, Actor actor)
@@ -27,13 +36,15 @@ public class ActorController : EntityController
         Initialize(entity);
         transform.position = (Vector2)entity.Position;
         rotationLerpTarget = actor.Rotation;
-
+        healthBar = HealthBarManager.Instance.InitializeHealthBar(healthBarPrefab);
+        HealthBarManager.Instance.SetHealthBarPosition(healthBar, healthBarTarget);
+        healthBar.UpdateHealth(actor);
     }
 
     protected override void Update()
     {
         base.Update();
-
+        HealthBarManager.Instance.SetHealthBarPosition(healthBar, healthBarTarget);
         if (animator != null)
         {
             animator.SetFloat("Speed", velocity);
@@ -46,6 +57,5 @@ public class ActorController : EntityController
 
         float finalRotation = currentY + clampedDifference;
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, finalRotation, transform.rotation.eulerAngles.z);
-        //transform.rotation = Quaternion.Euler(transform.rotation.x, Quaternion.LookRotation(direction).eulerAngles.y, transform.rotation.z);
     }
 }

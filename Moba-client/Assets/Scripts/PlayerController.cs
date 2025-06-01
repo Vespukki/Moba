@@ -4,7 +4,7 @@ using UnityEngine.SocialPlatforms;
 
 public class PlayerController : MonoBehaviour
 {
-    private uint PlayerId;
+    [SerializeField] private uint PlayerId;
     public static PlayerController Local { get; private set; }
 
 

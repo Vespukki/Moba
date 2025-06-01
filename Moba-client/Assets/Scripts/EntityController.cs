@@ -21,8 +21,11 @@ public class EntityController : MonoBehaviour
     {
 
     }
+    protected virtual void Awake()
+    {
 
-    
+    }
+
     public void UpdateEntity(Entity newEntity)
     {
         lerpTimer = 0;

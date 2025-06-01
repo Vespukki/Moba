@@ -21,7 +21,7 @@ public static partial class Module
         public uint entity_id;
         //public uint statblock_id;
         public float rotation;
-        public float currentHealth;
+        public float current_health;
         public float max_health;
     }
 
@@ -111,7 +111,7 @@ public static partial class Module
                 ctx.Db.walking.entity_id.Delete(walker.entity_id);
                 continue;
             }
-            Actor unit = nullableUnit.Value;
+            Actor actor = nullableUnit.Value;
 
             var difference = walker.target_walk_pos - entity.position;
 
@@ -128,7 +128,7 @@ public static partial class Module
             if (distance <= distanceToMove)
             {
                 newPos = walker.target_walk_pos;
-                finalRotation = unit.rotation;
+                finalRotation = actor.rotation;
                 ctx.Db.walking.entity_id.Delete(walker.entity_id);
             }
             else
@@ -144,9 +144,10 @@ public static partial class Module
             {
                 entity_id = walker.entity_id,
                 rotation = finalRotation,
-                currentHealth = 4f,
-                max_health = 5f
+                current_health = actor.current_health,
+                max_health = actor.max_health
             });
+
 
             DbVector2 newLastPos = entity.position;
 
@@ -158,5 +159,36 @@ public static partial class Module
                 last_position = newLastPos,
             });
         }
+    }
+
+    [Reducer]
+    public static void DoNothing(ReducerContext ctx)
+    {
+
+    }
+
+    [Reducer]
+    public static void SetEntityHealth(ReducerContext ctx, uint entityId, float newMaxHealth, float newCurrentHealth)
+    {
+        Log.Info("Changing health");
+
+        var actor = ctx.Db.actor.entity_id.Find(entityId);
+
+        if (actor == null) return;
+
+        if (newMaxHealth < 0) newMaxHealth = 0;
+
+        if (newCurrentHealth < 0) newCurrentHealth = 0;
+
+        else if (newCurrentHealth > newMaxHealth) newCurrentHealth = newMaxHealth;
+
+        ctx.Db.actor.entity_id.Delete(entityId);
+        ctx.Db.actor.Insert(new()
+        {
+            entity_id = actor.Value.entity_id,
+            rotation = actor.Value.rotation,
+            current_health = newCurrentHealth,
+            max_health = newMaxHealth
+        });
     }
 }

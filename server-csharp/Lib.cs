@@ -61,6 +61,10 @@ public static partial class Module
             player_id = player.player_id,
         };
         CreateChampionInstance(ctx, champ);
+
+        Log.Info($"player {player.player_id} Connected");
+
+
     }
 
 
@@ -69,7 +73,8 @@ public static partial class Module
     {
 
         var player = ctx.Db.player.identity.Find(ctx.Sender) ?? throw new Exception("Player not found");
-       
+        Log.Info($"player {player.player_id} disconnected");
+
         ctx.Db.logged_out_player.Insert(player);
         ctx.Db.player.identity.Delete(player.identity);
 
