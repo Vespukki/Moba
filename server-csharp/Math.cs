@@ -47,4 +47,12 @@ public partial struct DbVector2
     {
         return new DbVector2(a.x - b.x, a.y - b.y);
     }
+
+    // Returns the Euclidean distance between two points
+    public static float Distance(DbVector2 a, DbVector2 b)
+    {
+        float dx = a.x - b.x;
+        float dy = a.y - b.y;
+        return (float)Math.Sqrt(dx * dx + dy * dy);
+    }
 }

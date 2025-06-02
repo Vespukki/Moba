@@ -7,7 +7,7 @@ public class EntityController : MonoBehaviour
     [SerializeField] protected float lerpAmount = .01f;
     protected Vector3 lerpTarget;
     protected Vector3 targetPos;
-    uint instanceId;
+    public uint entityId;
 
     const float SNAP_DIST = 1000f;
 
@@ -15,7 +15,7 @@ public class EntityController : MonoBehaviour
 
     protected float velocity;
 
-    private float moveSpeed = 5;
+    private float moveSpeed = 250;
 
     protected virtual void Start()
     {
@@ -34,7 +34,7 @@ public class EntityController : MonoBehaviour
 
     public void Initialize(Entity entity)
     {
-        instanceId = entity.EntityId;
+        entityId = entity.EntityId;
         lerpTarget = (Vector2)entity.Position;
         lastFramePosition = transform.position;
     }
@@ -82,6 +82,10 @@ public class EntityController : MonoBehaviour
     public Vector3 DbPositionToWorldPosition(DbVector2 dbVector, float height)
     {
         return new Vector3(dbVector.X, height, dbVector.Y);
+    }
+    public DbVector2 WorldPositionToDbPosition(Vector3 vector3)
+    {
+        return new DbVector2(vector3.x, vector3.z);
     }
 
 }

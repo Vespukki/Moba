@@ -16,6 +16,8 @@ public class PlayerController : MonoBehaviour
     public Team team;
 
     private ActorController _currentHighlight;
+
+    public List<uint> ownedEntities;
     public ActorController CurrentHighlight
     {
         get
@@ -69,8 +71,9 @@ public class PlayerController : MonoBehaviour
             {
                 if (hit.collider.TryGetComponent<ActorController>(out var hitActor))
                 {
-                    if (!hit.collider.TryGetComponent<ChampionController>(out var hitChamp) || hitChamp.owner != GameManager.LocalPlayerId)
+                    if (!hit.collider.TryGetComponent<ChampionController>(out var hitChamp) || hitChamp.ownerPlayerId != GameManager.LocalPlayerId)
                     {
+                        actor = hitChamp;
                         newCurrentHighlight = hitActor;
                         consumedRay = true;
                     }
@@ -87,12 +90,17 @@ public class PlayerController : MonoBehaviour
             {
                 switch (hit.collider.tag)
                 {
-                    case "Unit":
+                    case "Actor":
                         if (!isPlayerChamp)
                         {
-                            if (actor.team != team)
+                            if (actor != null && actor.team != team)
                             {
-                                // GameManager.Conn.Reducers.SetAttack();
+                                Debug.Log($"going to attack {actor.gameObject.name} now");
+
+                                foreach (var id in ownedEntities)
+                                {
+                                    GameManager.Conn.Reducers.SetAttackTarget(id, actor.entityId);
+                                }
 
                                 consumedRay = true;
                             }
@@ -104,7 +112,10 @@ public class PlayerController : MonoBehaviour
                         DbVector2 targetPos = new DbVector2(worldPosition.x, worldPosition.z);
 
                         // Send to server
-                        GameManager.Conn.Reducers.SetTargetWalkPos(targetPos);
+                        foreach (var id in ownedEntities)
+                        {
+                            GameManager.Conn.Reducers.SetTargetWalkPos(id, targetPos, true);
+                        }
                         consumedRay = true;
                         break;
 

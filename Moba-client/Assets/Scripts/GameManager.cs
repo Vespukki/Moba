@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 public class GameManager : MonoBehaviour
 {
@@ -64,6 +65,9 @@ public class GameManager : MonoBehaviour
         conn.Db.Walking.OnDelete += WalkingOnDelete;
         conn.Db.Walking.OnUpdate += WalkingOnUpdate;
         conn.Db.Walking.OnInsert += WalkingOnInsert;
+        conn.Db.Attacking.OnInsert += AttackingOnInsert;
+        conn.Db.Attacking.OnUpdate += AttackingOnUpdate;
+        conn.Db.Attacking.OnDelete += AttackingOnDelete;
 
         OnConnected?.Invoke();
 
@@ -71,6 +75,30 @@ public class GameManager : MonoBehaviour
         Conn.SubscriptionBuilder()
             .OnApplied(HandleSubscriptionApplied)
             .SubscribeToAllTables();
+    }
+
+    private void AttackingOnDelete(EventContext context, Attacking row)
+    {
+        if (championInstances.TryGetValue(row.EntityId, out var champController))
+        {
+            //champController.UpdateAttacker(row);
+        }
+    }
+
+    private void AttackingOnUpdate(EventContext context, Attacking oldRow, Attacking newRow)
+    {
+        if (championInstances.TryGetValue(newRow.EntityId, out var champController))
+        {
+            //champController.UpdateAttacker(newRow);
+        }
+    }
+
+    private void AttackingOnInsert(EventContext context, Attacking row)
+    {
+        if(championInstances.TryGetValue(row.EntityId, out var champController))
+        {
+           // champController.UpdateAttacker(row);
+        }
     }
 
     private void PlayerOnDelete(EventContext context, Player row)
@@ -131,6 +159,11 @@ public class GameManager : MonoBehaviour
         Entity entity = ctx.Db.Entity.EntityId.Find(champ.EntityId);
         Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
 
+        if (champ.PlayerId == LocalPlayerId)
+        {
+            PlayerController.Local.ownedEntities.Add(champ.EntityId);
+        }
+
         championInstances.Add(champ.EntityId, PrefabManager.SpawnChampion(entity, actor, champ));
         Debug.Log("CHAMPION CREATED");
     }
@@ -138,8 +171,19 @@ public class GameManager : MonoBehaviour
     private void PlayerOnInsert(EventContext ctx, Player player)
     {
         if (player.Identity != LocalIdentity) return;
+
+        var playerController = PrefabManager.SpawnPlayer(player);
+
+
+        foreach (var champ in championInstances.Values)
+        {
+            if (champ.ownerPlayerId == player.PlayerId)
+            {
+                playerController.ownedEntities.Add(champ.entityId);
+            }
+        }
+
         Debug.Log($"Spawning player: {player.PlayerId}");
-        PrefabManager.SpawnPlayer(player);
         LocalPlayerId = player.PlayerId;
     }
 

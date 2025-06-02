@@ -20,12 +20,22 @@ public static partial class Module
         public Team team;
     }
 
-    [Table(Name = "move_all_players_timer", Scheduled = nameof(MoveAllPlayers), ScheduledAt = nameof(scheduled_at))]
-    public partial struct MoveAllPlayersTimer
+    [Table(Name = "tick_timer", Scheduled = nameof(DoTick), ScheduledAt = nameof(scheduled_at))]
+    public partial struct TickTimer
     {
         [PrimaryKey, AutoInc]
         public ulong scheduled_id;
         public ScheduleAt scheduled_at;
+    }
+
+    [Reducer]
+    public static void DoTick(ReducerContext ctx, TickTimer timer)
+    {
+        deltaTime = ctx.Timestamp.TimeDurationSince(lastTimestamp);
+        lastTimestamp = ctx.Timestamp;
+
+        MoveAllPlayers(ctx);
+        MakeAllAttacks(ctx);
     }
 
     [Reducer(ReducerKind.ClientConnected)]
@@ -98,8 +108,9 @@ public static partial class Module
         {
             champ_id = "fiora",
             base_ad = 50,
-            name = "Fiora"
-
+            name = "Fiora",
+            attack_range = 150,
+            
         });
 
         Log.Info("Adding Target Dummy as default champion");
@@ -107,12 +118,18 @@ public static partial class Module
         {
             champ_id = "dummy",
             base_ad = 0,
-            name = "Target Dummy"
-
+            name = "Target Dummy",
+            attack_range = 0,
+            
         });
 
-        ScheduleMoveAllPlayers(ctx, 33_000);
-       
+        var tickTimer = new TickTimer
+        {
+            scheduled_at = new ScheduleAt.Interval(new TimeDuration(33_000))
+        };
+
+        ctx.Db.tick_timer.Insert(tickTimer);
+
     }
 }
 

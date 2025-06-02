@@ -37,6 +37,7 @@ public class ActorController : EntityController
 
     public void Initialize(Entity entity, Actor actor)
     {
+        Debug.Log($"initializing {gameObject.name}'s entity");
         Initialize(entity);
         team = actor.Team;
         transform.position = (Vector2)entity.Position;

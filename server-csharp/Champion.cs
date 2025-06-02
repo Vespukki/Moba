@@ -9,6 +9,7 @@ public static partial class Module
         public string champ_id;
         public string name;
         public int base_ad;
+        public uint attack_range;
     }
 
 
@@ -42,8 +43,10 @@ public static partial class Module
     [Reducer]
     public static void CreateChampionInstance(ReducerContext ctx, ChampionInstance champ)
     {
-
-
+        var _champStats = ctx.Db.champion_stats.champ_id.Find(champ.champ_id);
+        ChampionStats champStats;
+        if (_champStats != null) champStats = _champStats.Value;
+        else return;
         var newEntity = ctx.Db.entity.Insert(new Entity() 
         {
             entity_id = 0, //auto increments
@@ -66,7 +69,9 @@ public static partial class Module
             max_health = 2000f,
             current_health = 1000f,
             rotation = 0,
-            team = teamToBe
+            team = teamToBe,
+            attack_range = champStats.attack_range,
+            attack_animation_time = .5f
         });
 
         ChampionInstance newChamp = new()

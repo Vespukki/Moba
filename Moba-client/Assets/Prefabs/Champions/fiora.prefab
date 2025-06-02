@@ -2594,7 +2594,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.02, y: 0.02, z: 0.02}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 413410621689141766}
@@ -2638,10 +2638,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lerpTimer: 0
   lerpAmount: 0.01
+  team: 0
   healthBarPrefab: {fileID: 2242735179602747154, guid: 8a9ebd27f2f455d48bef80dfad827d28, type: 3}
   healthBarTarget: {fileID: 413410621689141766}
   maxRotation: 10
   smr: {fileID: 5270684713454688393}
+  owner: 0
 --- !u!136 &2605583971463288279
 CapsuleCollider:
   m_ObjectHideFlags: 0

@@ -49,15 +49,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 57760bdf36966e141ab82620879caf8e, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.02
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 57760bdf36966e141ab82620879caf8e, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.02
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 57760bdf36966e141ab82620879caf8e, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.02
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 57760bdf36966e141ab82620879caf8e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -453,10 +453,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lerpTimer: 0
   lerpAmount: 0.01
+  team: 0
   healthBarPrefab: {fileID: 2242735179602747154, guid: 8a9ebd27f2f455d48bef80dfad827d28, type: 3}
   healthBarTarget: {fileID: 5293243197554569877}
   maxRotation: 10
   smr: {fileID: 9021258889095607742}
+  owner: 0
 --- !u!136 &7900516957656330977
 CapsuleCollider:
   m_ObjectHideFlags: 0
