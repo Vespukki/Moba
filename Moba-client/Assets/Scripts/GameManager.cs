@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
     public static Identity LocalIdentity { get; private set; }
+    public static uint LocalPlayerId { get; private set; }
     public static DbConnection Conn { get; private set; }
 
     public Dictionary<uint, ChampionController> championInstances = new();
@@ -136,8 +137,10 @@ public class GameManager : MonoBehaviour
 
     private void PlayerOnInsert(EventContext ctx, Player player)
     {
+        if (player.Identity != LocalIdentity) return;
         Debug.Log($"Spawning player: {player.PlayerId}");
         PrefabManager.SpawnPlayer(player);
+        LocalPlayerId = player.PlayerId;
     }
 
     void ChampionStatsOnInsert(EventContext ctx, ChampionStats addedvalue)

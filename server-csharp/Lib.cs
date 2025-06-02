@@ -17,6 +17,7 @@ public static partial class Module
         [Unique, AutoInc]
         public uint player_id;
         public string name;
+        public Team team;
     }
 
     [Table(Name = "move_all_players_timer", Scheduled = nameof(MoveAllPlayers), ScheduledAt = nameof(scheduled_at))]
@@ -48,7 +49,7 @@ public static partial class Module
             {
                 identity = ctx.Sender,
                 name = "",
-                // player_id is NOT set here - it will be auto-assigned
+                team = Team.Blue
             };
             ctx.Db.player.Insert(player);
 
@@ -98,6 +99,15 @@ public static partial class Module
             champ_id = "fiora",
             base_ad = 50,
             name = "Fiora"
+
+        });
+
+        Log.Info("Adding Target Dummy as default champion");
+        ctx.Db.champion_stats.Insert(new ChampionStats
+        {
+            champ_id = "dummy",
+            base_ad = 0,
+            name = "Target Dummy"
 
         });
 

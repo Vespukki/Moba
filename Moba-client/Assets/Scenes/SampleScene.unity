@@ -177,8 +177,8 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
+  near clip plane: 0.03
+  far clip plane: 40
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -585,7 +585,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PlayerPrefab: {fileID: 8515374120993059662, guid: 765341960b791ee4fac251d00eb48ad0, type: 3}
-  ChampionPrefab: {fileID: 6238916537026112285, guid: d6530a8db56be814f848f96d6775c619, type: 3}
+  fioraPrefab: {fileID: 6238916537026112285, guid: d6530a8db56be814f848f96d6775c619, type: 3}
+  dummyPrefab: {fileID: 7098197973287093802, guid: 24bb2971a06ea354c8d4a8fb67aa2113, type: 3}
 --- !u!114 &622112695
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -793,9 +794,9 @@ GameObject:
   - component: {fileID: 1389996917}
   - component: {fileID: 1389996916}
   - component: {fileID: 1389996915}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Plane
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -909,7 +910,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1902056368
 RectTransform:
   m_ObjectHideFlags: 0

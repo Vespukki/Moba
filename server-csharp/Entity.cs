@@ -13,6 +13,8 @@ public static partial class Module
 
     }
 
+    [Type]
+    public enum Team {Red, Blue, Neutral}
 
     [Table(Name = "actor", Public = true)]
     public partial struct Actor
@@ -23,6 +25,7 @@ public static partial class Module
         public float rotation;
         public float current_health;
         public float max_health;
+        public Team team;
     }
 
     [Table(Name = "walking", Public = true)]
@@ -145,7 +148,8 @@ public static partial class Module
                 entity_id = walker.entity_id,
                 rotation = finalRotation,
                 current_health = actor.current_health,
-                max_health = actor.max_health
+                max_health = actor.max_health,
+                team = actor.team
             });
 
 

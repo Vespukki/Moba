@@ -44,3 +44,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b20ce556488f40140952c57f390795d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  PlayerId: 0
+  layerMask:
+    serializedVersion: 2
+    m_Bits: 72
+  highlightMat: {fileID: 2100000, guid: 1e2817911072f304fa5f85be62dfd076, type: 2}

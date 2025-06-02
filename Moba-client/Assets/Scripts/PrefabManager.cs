@@ -1,13 +1,17 @@
 using SpacetimeDB.Types;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PrefabManager : MonoBehaviour
 {
     public static PrefabManager Instance;
     public PlayerController PlayerPrefab;
-    public GameObject ChampionPrefab;
 
-    private void Start()
+    public Dictionary<string, GameObject> idsToChampPrefabs = new();
+    [SerializeField] GameObject fioraPrefab;
+    [SerializeField] GameObject dummyPrefab;
+
+    private void Awake()
     {
         if (Instance == null)
         {
@@ -17,6 +21,10 @@ public class PrefabManager : MonoBehaviour
         {
             Debug.LogError("Extra Prefab Manager Spawned");
         }
+
+        idsToChampPrefabs.Clear();
+        idsToChampPrefabs.Add("fiora", fioraPrefab);
+        idsToChampPrefabs.Add("dummy", dummyPrefab);
     }
 
     public static PlayerController SpawnPlayer(Player player)
@@ -29,9 +37,18 @@ public class PrefabManager : MonoBehaviour
 
     public static ChampionController SpawnChampion(Entity entity, Actor actor, ChampionInstance champ)
     {
-        var champController = Instantiate(Instance.ChampionPrefab).GetComponentInChildren<ChampionController>();
-        champController.name = $"ChampionController - {champ.ChampId}";
-        champController.Initialize(entity, actor, champ);
-        return champController;
+        if (Instance.idsToChampPrefabs.TryGetValue(champ.ChampId, out GameObject champPrefab))
+        {
+            var champController = Instantiate(champPrefab).GetComponentInChildren<ChampionController>();
+            champController.name = $"ChampionController - {champ.ChampId}";
+            champController.Initialize(entity, actor, champ);
+            return champController;
+        }
+
+        else
+        {
+            Debug.LogError($"no prefab found for champ ID {champ.ChampId}");
+            return null;
+        }
     }
 }

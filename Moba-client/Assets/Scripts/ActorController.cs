@@ -5,12 +5,16 @@ public class ActorController : EntityController
 {
     protected float rotationLerpTarget;
 
+    public Team team;
+
     [SerializeField] protected GameObject healthBarPrefab;
     private HealthBar healthBar;
     [SerializeField] Transform healthBarTarget;
 
     Animator animator;
     [SerializeField] protected float maxRotation = 10;
+
+    [SerializeField] SkinnedMeshRenderer smr;
 
     protected override void Awake()
     {
@@ -34,11 +38,44 @@ public class ActorController : EntityController
     public void Initialize(Entity entity, Actor actor)
     {
         Initialize(entity);
+        team = actor.Team;
         transform.position = (Vector2)entity.Position;
         rotationLerpTarget = actor.Rotation;
         healthBar = HealthBarManager.Instance.InitializeHealthBar(healthBarPrefab);
         HealthBarManager.Instance.SetHealthBarPosition(healthBar, healthBarTarget);
         healthBar.UpdateHealth(actor);
+    }
+
+
+    public void SetOutline(Material outlineMat)
+    {
+        Debug.Log("setting outline");
+
+        var mats = smr.materials;
+        Material[] updatedMaterials = new Material[mats.Length + 1];
+
+        for (int i = 0; i < mats.Length; i++)
+        {
+            updatedMaterials[i] = mats[i];
+        }
+
+        updatedMaterials[mats.Length] = outlineMat;
+
+        smr.materials = updatedMaterials;
+
+    }
+
+    public void RemoveOutline()
+    {
+        var mats = smr.materials;
+        Material[] updatedMaterials = new Material[mats.Length - 1];
+
+        for (int i = 0; i < mats.Length - 1; i++)
+        {
+            updatedMaterials[i] = mats[i];
+        }
+
+        smr.materials = updatedMaterials;
     }
 
     protected override void Update()

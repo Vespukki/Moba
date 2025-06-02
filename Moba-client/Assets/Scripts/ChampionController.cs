@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ChampionController : ActorController
 {
+    public uint owner;
 
     protected override void Start()
     {
@@ -18,6 +19,7 @@ public class ChampionController : ActorController
     public void Initialize(Entity entity, Actor actor, ChampionInstance champ)
     {
         Initialize(entity, actor);
+        owner = champ.PlayerId;
     }
 
     internal void UpdateChampion(ChampionInstance newChamp)

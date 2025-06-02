@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3040503399580075511}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_CENTER_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,7 +41,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8866030346597136878}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_BUFFBONE_GLB_FOOT_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73,7 +73,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 467739683355855566}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Pinky2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -105,7 +105,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2678054433036354856}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back_CapeB
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -138,9 +138,9 @@ GameObject:
   m_Component:
   - component: {fileID: 6299604051121633911}
   - component: {fileID: 5270684713454688393}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Meshes
-  m_TagString: Untagged
+  m_TagString: Actor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -297,7 +297,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4626492972242061203}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back_CapeF_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -328,7 +328,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5351560687558642781}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Foot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -360,7 +360,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4605233475812509925}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Pauldron_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -391,7 +391,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2951672238934220680}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Middle1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -423,7 +423,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1385196985927695832}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Weapon_bend1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -455,7 +455,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5408815541620665370}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_BUFFBONE_GLB_FOOT_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -487,7 +487,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2768813043369906820}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Pinky1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -519,7 +519,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6630368411177138253}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Pinky2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -551,7 +551,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8632497202899140816}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Neck
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -583,7 +583,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5379993960404733610}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Shoulder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -615,7 +615,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4773844580136015510}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Spine2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -651,7 +651,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6916969457970438571}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_BUFFBONE_GLB_FOOT_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -682,7 +682,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2260131619862190056}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Index2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -714,7 +714,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3046035656573375429}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Shoulder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -746,7 +746,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7842943550602487306}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Root
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -779,7 +779,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1872299072209864912}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Hip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -811,7 +811,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2254225991464568499}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_GLB_WEAPON_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -843,7 +843,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6302530156977826388}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Hip
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -875,7 +875,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7642745105409603047}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Pinky1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -907,7 +907,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4160888255319145211}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Ring1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -939,9 +939,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5743232506971230025}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Skeleton
-  m_TagString: Untagged
+  m_TagString: Actor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -977,7 +977,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2894585124622537133}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Thumb2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1008,7 +1008,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4947128118244271645}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_BUFFBONE_GLB_HAND_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1039,7 +1039,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6541378087361203896}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Elbow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1072,7 +1072,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3773507692887180823}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Ring2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1104,7 +1104,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1804944509280963579}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_GLB_CHANNEL_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1135,7 +1135,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2951498356479095810}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_LAYOUT_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1166,7 +1166,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2115581362717093385}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back_CapeA
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1198,7 +1198,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9170695486277987975}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_BUFFBONE_GLB_FOOT_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1229,7 +1229,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2901758806344609517}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Pauldron
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1261,7 +1261,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1048228341220747543}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_OVERHEAD_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1292,7 +1292,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1386778280080734942}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_OVERHEAD_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1324,7 +1324,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8981478677136705187}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_CHEST_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1356,7 +1356,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 130677155324472057}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Index1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1388,7 +1388,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4907546776756309230}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ring2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1420,7 +1420,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1195618275403901349}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back_Cape_Orient
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1452,7 +1452,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4416791230764487835}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Spine1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1484,7 +1484,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2004754562394772761}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Head_HairA_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1515,7 +1515,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1859489548276309770}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Toe_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1546,7 +1546,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2873249884564043770}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_GLB_WEAPON_1_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1577,7 +1577,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6279052668465086261}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ring2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1608,7 +1608,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8574712516315767401}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Thumb2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1640,7 +1640,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5417005931921015037}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Clavicle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1673,7 +1673,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2073776093173802287}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Head_HairA
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1705,7 +1705,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4730727500792745360}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Foot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1737,7 +1737,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2774112069372450949}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Thumb2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1769,7 +1769,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3187534349064556994}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1803,7 +1803,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8543676651956468276}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Thumb2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1834,7 +1834,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8922573817184858417}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ring1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1866,7 +1866,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1057992700877515678}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ruler_Lo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1898,7 +1898,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3121226231292433926}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Weapon_gleam
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1930,7 +1930,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5672836833506001290}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Knee
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1963,7 +1963,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 849570593899875089}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Thumb1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1995,7 +1995,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1487688776148921503}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Weapon_gleam_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2026,7 +2026,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 322824602007153832}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_BUFFBONE_GLB_HAND_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2058,7 +2058,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 857190520231874708}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_CHEST_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2089,7 +2089,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6178120480217855717}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Hand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2125,7 +2125,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7522544643465893081}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Middle2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2157,7 +2157,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3676900450068298397}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Head_HairA
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2189,7 +2189,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6046832308591152880}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Knee
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2222,7 +2222,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4191443676353577442}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Weapon_bend1_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2253,7 +2253,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 817997832476210923}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Index1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2285,7 +2285,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7101930107058776133}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Middle2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2317,7 +2317,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7845834471871955076}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Hand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2353,7 +2353,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7418160955094795921}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Pinky2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2384,7 +2384,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7218780455459704353}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Middle2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2415,7 +2415,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4765559823791097737}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back_CapeD
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2447,7 +2447,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8288515550870878493}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Middle1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2479,7 +2479,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1190493526963115934}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Pauldron
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2511,7 +2511,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7816375051173309475}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_CSTM_WEAPON_CENTER
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2543,7 +2543,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4141364774146077674}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Pinky2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2576,9 +2576,10 @@ GameObject:
   - component: {fileID: 6267355185369802669}
   - component: {fileID: 1886233496959734432}
   - component: {fileID: 3149399276323927328}
-  m_Layer: 0
+  - component: {fileID: 2605583971463288279}
+  m_Layer: 6
   m_Name: fiora
-  m_TagString: Untagged
+  m_TagString: Actor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2640,6 +2641,30 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 2242735179602747154, guid: 8a9ebd27f2f455d48bef80dfad827d28, type: 3}
   healthBarTarget: {fileID: 413410621689141766}
   maxRotation: 10
+  smr: {fileID: 5270684713454688393}
+--- !u!136 &2605583971463288279
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6139479243871452900}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 62.78
+  m_Height: 210.71
+  m_Direction: 1
+  m_Center: {x: 12.62, y: 91.95, z: 0}
 --- !u!1 &6238916537026112285
 GameObject:
   m_ObjectHideFlags: 0
@@ -2649,9 +2674,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6764060455719678375}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: fiora
-  m_TagString: Untagged
+  m_TagString: Actor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2681,7 +2706,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1324192888902114027}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Toe
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2713,7 +2738,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9092495821841683084}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Snap_Weapon2World
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2745,7 +2770,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6587871499758479805}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Pelvis
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2778,7 +2803,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2312715551547125106}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_HEAD_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2809,7 +2834,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6303556024238508230}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Toe_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2840,7 +2865,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7405279868874148226}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Clavicle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2873,7 +2898,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3031353619265788008}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_CSTM_WEAPON_CENTER_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2904,7 +2929,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 309232812622590790}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Thumb1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2936,7 +2961,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1517829385561364787}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ruler_Lo_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2967,7 +2992,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6971498727548932761}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Weapon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3004,7 +3029,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6511575795028021600}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Ring2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3035,7 +3060,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 342559998115807511}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back_CapeC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3067,7 +3092,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4245237737264253865}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Index2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3099,7 +3124,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1575767245866069330}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Head_HairA_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3130,7 +3155,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3300298504323470636}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_GLB_GROUND_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3162,7 +3187,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4869052679554751773}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Snap_Weapon2World_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3193,7 +3218,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5070992924449631629}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Index2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3224,7 +3249,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4463569178424586372}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_CENTER_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3255,7 +3280,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4145498329262885416}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_BUFFBONE_GLB_HAND_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3287,7 +3312,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4617327416306957091}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Toe
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3319,7 +3344,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5090602054517810084}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_GLB_CHANNEL_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3351,7 +3376,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2054406761369693816}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ruler_Break
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3383,9 +3408,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 413410621689141766}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Healthbar target
-  m_TagString: Untagged
+  m_TagString: Actor
   m_Icon: {fileID: 3443629218296621865, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3414,7 +3439,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7380055840938766469}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_HEAD_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3446,7 +3471,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1553639199790026413}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Index2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3477,7 +3502,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7145739525513987522}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_BUFFBONE_GLB_HAND_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3508,7 +3533,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7410298941681570082}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Middle2_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3539,7 +3564,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4664297463569077822}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BUFFBONE_GLB_GROUND_LOC_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3570,7 +3595,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6952746775654947839}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: L_Elbow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3603,7 +3628,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7517304949766548969}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Back_CapeF
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3635,7 +3660,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4614332883971020361}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ruler_Up_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3666,7 +3691,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3621211367406428794}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: R_Ruler_Up
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3698,7 +3723,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4378556161512185801}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: C_BUFFBONE_GLB_LAYOUT_LOC
   m_TagString: Untagged
   m_Icon: {fileID: 0}

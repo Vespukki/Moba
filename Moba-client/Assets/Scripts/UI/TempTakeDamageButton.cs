@@ -4,6 +4,11 @@ public class TempTakeDamageButton : MonoBehaviour
 {
     public void TakeDamage()
     {
-        GameManager.Conn.Reducers.SetEntityHealth(1, 3000, 500);
+        GameManager.Conn.Reducers.CreateChampionInstance(new SpacetimeDB.Types.ChampionInstance()
+        {
+            ChampId = "dummy",
+            EntityId = 0,
+            PlayerId = 696969
+        });
     }
 }

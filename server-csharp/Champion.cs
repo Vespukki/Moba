@@ -42,6 +42,8 @@ public static partial class Module
     [Reducer]
     public static void CreateChampionInstance(ReducerContext ctx, ChampionInstance champ)
     {
+
+
         var newEntity = ctx.Db.entity.Insert(new Entity() 
         {
             entity_id = 0, //auto increments
@@ -49,14 +51,22 @@ public static partial class Module
             last_position = new(0,0),
         });
 
+        var player = ctx.Db.player.player_id.Find(champ.player_id);
 
+        Team teamToBe = Team.Neutral;
+
+        if (player != null)
+        {
+            teamToBe = player.Value.team;
+        }
 
         var newActor = ctx.Db.actor.Insert(new Actor()
         {
             entity_id = newEntity.entity_id,
             max_health = 2000f,
             current_health = 1000f,
-            rotation = 0
+            rotation = 0,
+            team = teamToBe
         });
 
         ChampionInstance newChamp = new()
