@@ -62,8 +62,10 @@ public static partial class Module
     {
         [PrimaryKey, AutoInc]
         public ulong scheduled_id;
-        public ScheduleAt scheduled_at;
+
+        [Unique]
         public uint entity_id;
+        public ScheduleAt scheduled_at;
         public DbVector2 position;
         public bool remove_other_actions;
     }
@@ -159,6 +161,7 @@ public static partial class Module
 
             if (Math.Abs(timeUntilHit) < .4f * windupTime)
             {
+                ctx.Db.set_walk_target_timer.entity_id.Delete(entityId);
                 ctx.Db.set_walk_target_timer.Insert(new()
                 {
                     scheduled_at = new Timestamp(nullableAttacking.Value.attack_start_time.MicrosecondsSinceUnixEpoch + (int)(windupTime * 1.4f * 1_000_000f)),

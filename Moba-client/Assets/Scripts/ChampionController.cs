@@ -12,22 +12,6 @@ public class ChampionController : ActorController
         base.Start();
     }
 
-    public async void DoAttack()
-    {
-        attackInitialized = true;
-
-        animator.SetBool("Attacking", true);
-        attackTimer = 0;
-
-        while (attackTimer < .13793f * (1/.69))
-        {
-            await Task.Yield();
-            attackTimer += Time.deltaTime;
-        }
-        //now attack is locked in
-
-    }
-
     protected override void Update()
     {
         base.Update();
@@ -49,14 +33,9 @@ public class ChampionController : ActorController
         targetPos = DbPositionToWorldPosition(newWalker.TargetWalkPos, transform.position.y);
     }
 
-    bool attackInitialized = false;
-    float attackTimer = 0;
-    bool timerStarted = false;
-    bool allowAttackReset = true;
-
     public void AttackingCreated(Attacking attack)
     {
-        //do nothing for now I guess
+        UpdateAttacker(attack);
     }
 
     internal void UpdateAttacker(Attacking attack)
@@ -67,38 +46,10 @@ public class ChampionController : ActorController
         }
         else
         {
+            animator.SetFloat("RNG", UnityEngine.Random.Range(0f, 1f));
             animator.SetBool("AttackStarted", true);
         }
-
-        /*if (!attack.IsAttacking)
-        {
-            return;
-        }
-
-        if (!attackInitialized) //do once when the attack first starts
-        {
-            InitializeAttack();
-        }
-
-        if (attack.HasDamaged && !timerStarted)
-        {
-            allowAttackReset = false;
-            //animator.SetBool("AttackReady", )
-        }*/
-
     }
-    private void InitializeAttack()
-    {
-        float postHitRatio = 1f - .13793f;
-
-        float attackTime = 1f / .69f;
-
-        attackTimer = attackTime * postHitRatio;
-
-        timerStarted = true;
-        animator.SetBool("Attacking", true);
-    }
-
     public void AttackingDeleted(Attacking attack)
     {
         animator.SetBool("AttackStarted", false);
