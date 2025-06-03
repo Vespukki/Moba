@@ -1,4 +1,5 @@
 using SpacetimeDB.Types;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class ActorController : EntityController
@@ -11,14 +12,16 @@ public class ActorController : EntityController
     private HealthBar healthBar;
     [SerializeField] Transform healthBarTarget;
 
-    Animator animator;
+    public Animator animator;
     [SerializeField] protected float maxRotation = 10;
 
     [SerializeField] SkinnedMeshRenderer smr;
-
+    Color originalColor;
     protected override void Awake()
     {
         base.Awake();
+        originalColor = smr.material.color;
+
         animator = GetComponent<Animator>();
     }
 
@@ -28,11 +31,34 @@ public class ActorController : EntityController
         
     }
 
-    public void UpdateActor(Actor newActor)
+    public void InsertActor(Actor newActor)
     {
         rotationLerpTarget = newActor.Rotation;
 
         healthBar.UpdateHealth(newActor);
+    }
+
+    public void UpdateActor(Actor oldActor, Actor newActor)
+    {
+        rotationLerpTarget = newActor.Rotation;
+
+        healthBar.UpdateHealth(newActor);
+        if (newActor.CurrentHealth != oldActor.CurrentHealth)
+        {
+            FlashRed(500);
+        }
+    }
+
+    public async void FlashRed(int msDelay)
+    {
+        SkinnedMeshRenderer smr = GetComponentInChildren<SkinnedMeshRenderer>();
+
+
+        smr.material.color = Color.red;
+
+        await Task.Delay(msDelay);
+
+        smr.material.color = originalColor;
     }
 
     public void Initialize(Entity entity, Actor actor)
@@ -96,4 +122,9 @@ public class ActorController : EntityController
         float finalRotation = currentY + clampedDifference;
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, finalRotation, transform.rotation.eulerAngles.z);
     }
+
+   /* public void UpdateAttack(Attacking attack)
+    {
+
+    }*/
 }

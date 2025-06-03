@@ -1,16 +1,31 @@
 using SpacetimeDB.Types;
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class ChampionController : ActorController
 {
     public uint ownerPlayerId;
 
-    private uint attackRange = 1;
-
     protected override void Start()
     {
         base.Start();
+    }
+
+    public async void DoAttack()
+    {
+        attackInitialized = true;
+
+        animator.SetBool("Attacking", true);
+        attackTimer = 0;
+
+        while (attackTimer < .13793f * (1/.69))
+        {
+            await Task.Yield();
+            attackTimer += Time.deltaTime;
+        }
+        //now attack is locked in
+
     }
 
     protected override void Update()
@@ -34,16 +49,59 @@ public class ChampionController : ActorController
         targetPos = DbPositionToWorldPosition(newWalker.TargetWalkPos, transform.position.y);
     }
 
-    internal void UpdateAttacker(Attacking attack, EntityController target)
+    bool attackInitialized = false;
+    float attackTimer = 0;
+    bool timerStarted = false;
+    bool allowAttackReset = true;
+
+    public void AttackingCreated(Attacking attack)
     {
-        /*
-        DbVector2 myPos = WorldPositionToDbPosition(transform.position);
-        DbVector2 targetPos = WorldPositionToDbPosition(target.transform.position);
+        //do nothing for now I guess
+    }
 
-        float dx = myPos.X - targetPos.X;
-        float dy = myPos.Y - targetPos.Y;
+    internal void UpdateAttacker(Attacking attack)
+    {
+        if (attack.AttackState == AttackState.Ready)
+        {
+            animator.SetBool("AttackStarted", false);
+        }
+        else
+        {
+            animator.SetBool("AttackStarted", true);
+        }
 
-        float dist =Mathf.Sqrt(dx * dx + dy * dy);
-        if(dist < )*/
+        /*if (!attack.IsAttacking)
+        {
+            return;
+        }
+
+        if (!attackInitialized) //do once when the attack first starts
+        {
+            InitializeAttack();
+        }
+
+        if (attack.HasDamaged && !timerStarted)
+        {
+            allowAttackReset = false;
+            //animator.SetBool("AttackReady", )
+        }*/
+
+    }
+    private void InitializeAttack()
+    {
+        float postHitRatio = 1f - .13793f;
+
+        float attackTime = 1f / .69f;
+
+        attackTimer = attackTime * postHitRatio;
+
+        timerStarted = true;
+        animator.SetBool("Attacking", true);
+    }
+
+    public void AttackingDeleted(Attacking attack)
+    {
+        animator.SetBool("AttackStarted", false);
+        animator.SetTriggerOneFrame(this, "CancelAttackAnimation");
     }
 }

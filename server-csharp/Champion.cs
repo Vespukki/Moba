@@ -71,7 +71,9 @@ public static partial class Module
             rotation = 0,
             team = teamToBe,
             attack_range = champStats.attack_range,
-            attack_animation_time = .5f
+            attack_speed = .69f,
+            windup_percent = .13793f,
+            last_attack_time = ctx.Timestamp
         });
 
         ChampionInstance newChamp = new()

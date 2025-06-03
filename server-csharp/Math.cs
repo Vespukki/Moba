@@ -55,4 +55,23 @@ public partial struct DbVector2
         float dy = a.y - b.y;
         return (float)Math.Sqrt(dx * dx + dy * dy);
     }
+
+    public static float RotationFromDirection(DbVector2 direction)
+    {
+        return MathF.Atan2(direction.x, direction.y) * 180 / MathF.PI;
+    }
+}
+
+public static partial class Module
+{
+    /// <summary>
+    /// returns absolute time difference between 2 Timestamps
+    /// </summary>
+    /// <param name="a"></param>
+    /// <param name="b"></param>
+    /// <returns></returns>
+    public static float GetTimestampDifferenceInSeconds(Timestamp a, Timestamp b)
+    {
+        return Math.Abs((float)a.TimeDurationSince(b).Microseconds / 1_000_000f);
+    }
 }

@@ -81,7 +81,7 @@ public class GameManager : MonoBehaviour
     {
         if (championInstances.TryGetValue(row.EntityId, out var champController))
         {
-            //champController.UpdateAttacker(row);
+            champController.AttackingDeleted(row);
         }
     }
 
@@ -89,7 +89,7 @@ public class GameManager : MonoBehaviour
     {
         if (championInstances.TryGetValue(newRow.EntityId, out var champController))
         {
-            //champController.UpdateAttacker(newRow);
+            champController.UpdateAttacker(newRow);
         }
     }
 
@@ -97,7 +97,7 @@ public class GameManager : MonoBehaviour
     {
         if(championInstances.TryGetValue(row.EntityId, out var champController))
         {
-           // champController.UpdateAttacker(row);
+           champController.AttackingCreated(row);
         }
     }
 
@@ -109,7 +109,7 @@ public class GameManager : MonoBehaviour
     {
         if (championInstances.TryGetValue(row.EntityId, out ChampionController champController))
         {
-            champController.UpdateActor(row);
+            champController.InsertActor(row);
             Debug.Log("actor on Insert");
         }
         
@@ -119,7 +119,7 @@ public class GameManager : MonoBehaviour
     {
         if (championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
         {
-            champController.UpdateActor(newRow);
+            champController.UpdateActor(oldRow, newRow);
         }
 
         

@@ -18,7 +18,9 @@ public static partial class Module
         public float max_health;
         public Team team;
         public uint attack_range;
-        public float attack_animation_time;
+        public float attack_speed;
+        public float windup_percent; //percentage
+        public Timestamp last_attack_time;
     }
 
     [Table(Name = "walking", Public = true)]
@@ -29,6 +31,10 @@ public static partial class Module
         public DbVector2 target_walk_pos;
     }
 
+    [Type]
+    public enum AttackState {Ready, Starting, Committed }
+
+
     [Table(Name = "attacking", Public = true)]
     public partial struct Attacking
     {
@@ -36,6 +42,30 @@ public static partial class Module
         public uint entity_id;
 
         public uint target_entity_id;
+
+        public Timestamp attack_start_time;
+
+        public AttackState attack_state;
+    }
+
+    [Table(Name = "attack_cooldown", Public = true)]
+    public partial struct AttackCooldown
+    {
+        [PrimaryKey, Unique]
+        public uint entity_id;
+
+        public Timestamp finishedTime;
+    }
+
+    [Table(Name = "set_walk_target_timer", Scheduled = nameof(SetFutureTargetWalkPos), ScheduledAt = nameof(scheduled_at))]
+    public partial struct SetWalkTargetTimer
+    {
+        [PrimaryKey, AutoInc]
+        public ulong scheduled_id;
+        public ScheduleAt scheduled_at;
+        public uint entity_id;
+        public DbVector2 position;
+        public bool remove_other_actions;
     }
 
     [Reducer]
@@ -51,7 +81,6 @@ public static partial class Module
         }
 
         Entity entity = nullableEntity.Value;
-
 
         var nullableTargetEntity = ctx.Db.entity.entity_id.Find(targetEntityId);
 
@@ -73,7 +102,9 @@ public static partial class Module
             var newAttacking = new Attacking()
             {
                 entity_id = oldAttacking.Value.entity_id,
-                target_entity_id = targetEntityId
+                target_entity_id = targetEntityId,
+                attack_start_time = ctx.Timestamp,
+                attack_state = AttackState.Ready
             };
 
             ctx.Db.attacking.entity_id.Delete(entityId);
@@ -86,10 +117,18 @@ public static partial class Module
             {
                 entity_id = entityId,
                 target_entity_id = targetEntityId,
+                attack_start_time = ctx.Timestamp,
+                attack_state = AttackState.Ready
             };
 
             ctx.Db.attacking.Insert(newAttacking);
         }
+    }
+
+    [Reducer]
+    public static void SetFutureTargetWalkPos(ReducerContext ctx, SetWalkTargetTimer caller)
+    {
+        SetTargetWalkPos(ctx, caller.entity_id, caller.position, caller.remove_other_actions);
     }
 
     [Reducer]
@@ -104,6 +143,32 @@ public static partial class Module
         }
 
         Entity entity = nullableEntity.Value;
+
+        var nullableAttacking = ctx.Db.attacking.entity_id.Find(entity.entity_id);
+
+        if(nullableAttacking != null)
+        {
+            float timeSinceAttackStarted = GetTimestampDifferenceInSeconds(nullableAttacking.Value.attack_start_time, ctx.Timestamp);
+
+            var nullableActor = ctx.Db.actor.entity_id.Find(entityId);
+            if (nullableActor == null) return;
+            Actor actor = nullableActor.Value;
+
+            float windupTime = (1f / actor.attack_speed) * actor.windup_percent;
+            float timeUntilHit = windupTime - timeSinceAttackStarted;
+
+            if (Math.Abs(timeUntilHit) < .4f * windupTime)
+            {
+                ctx.Db.set_walk_target_timer.Insert(new()
+                {
+                    scheduled_at = new Timestamp(nullableAttacking.Value.attack_start_time.MicrosecondsSinceUnixEpoch + (int)(windupTime * 1.4f * 1_000_000f)),
+                    entity_id = entityId,
+                    position = position,
+                    remove_other_actions = removeOtherActions
+                });
+                return;
+            }
+        } 
 
         if (removeOtherActions) ctx.Db.attacking.entity_id.Delete(entityId);
 
@@ -135,47 +200,117 @@ public static partial class Module
     }
 
     [Reducer]
-    public static void AttackWithActor(ReducerContext ctx, Attacking attacker)
+    public static void AttackWithActor(ReducerContext ctx, Attacking attack)
     {
 
         #region find entity and actor
-        var nullableEntity = ctx.Db.entity.entity_id.Find(attacker.entity_id);
+        var nullableEntity = ctx.Db.entity.entity_id.Find(attack.entity_id);
         if (nullableEntity == null)
         {
             Log.Info($"deleting attacker because entity is null");
-            ctx.Db.attacking.entity_id.Delete(attacker.entity_id);
+            ctx.Db.attacking.entity_id.Delete(attack.entity_id);
             return;
         }
         Entity entity = nullableEntity.Value;
 
-        var nullableUnit = ctx.Db.actor.entity_id.Find(attacker.entity_id);
+        var nullableUnit = ctx.Db.actor.entity_id.Find(attack.entity_id);
         if (nullableUnit == null)
         {
-            ctx.Db.attacking.entity_id.Delete(attacker.entity_id);
+            ctx.Db.attacking.entity_id.Delete(attack.entity_id);
             return;
         }
         Actor actor = nullableUnit.Value;
 
-        var nullableTargetEntity = ctx.Db.entity.entity_id.Find(attacker.target_entity_id);
+        var nullableTargetEntity = ctx.Db.entity.entity_id.Find(attack.target_entity_id);
         if (nullableTargetEntity == null)
         {
-            ctx.Db.attacking.entity_id.Delete(attacker.entity_id);
+            ctx.Db.attacking.entity_id.Delete(attack.entity_id);
             return;
         }
         Entity targetEntity = nullableTargetEntity.Value;
+
+        var nullableAttackCooldown = ctx.Db.attack_cooldown.entity_id.Find(actor.entity_id);
         #endregion
 
         if (DbVector2.Distance(entity.position, targetEntity.position) > actor.attack_range)
         {
-            SetTargetWalkPos(ctx,entity.entity_id, targetEntity.position, false);
+            SetTargetWalkPos(ctx, entity.entity_id, targetEntity.position, false);
 
             Log.Info("too far, walking over there");
         }
         else
         {
-            ctx.Db.walking.entity_id.Delete(attacker.entity_id);
-            Log.Info($"close enough, attacking because {entity.entity_id} is {DbVector2.Distance(entity.position, targetEntity.position)} away from {targetEntity.entity_id}");
+            
+            ctx.Db.walking.entity_id.Delete(attack.entity_id);
 
+            var difference = targetEntity.position - entity.position;
+
+            var direction = difference.Normalized();
+
+            float finalRotation = DbVector2.RotationFromDirection(direction);
+
+            Actor newActor = actor;
+            newActor.rotation = finalRotation;
+
+            Attacking newAttack = attack;
+
+
+
+            switch (attack.attack_state)
+            {
+                case AttackState.Ready:
+                    Log.Info("ready");
+                    if ((!nullableAttackCooldown.HasValue) || (nullableAttackCooldown.HasValue 
+                        && nullableAttackCooldown.Value.finishedTime.MicrosecondsSinceUnixEpoch <= ctx.Timestamp.MicrosecondsSinceUnixEpoch))
+                    {
+                        newAttack.attack_state = AttackState.Starting;
+                        newAttack.attack_start_time = ctx.Timestamp;
+                    }
+                    break;
+                case AttackState.Starting:
+
+                    Log.Info("Starting");
+
+                    if (GetTimestampDifferenceInSeconds(newAttack.attack_start_time, ctx.Timestamp) >= 1f / actor.attack_speed * actor.windup_percent)
+                    {
+                        var nullableTargetActor = ctx.Db.actor.entity_id.Find(attack.target_entity_id);
+                        if (nullableTargetActor != null)
+                        {
+                            Actor targetActor = nullableTargetActor.Value;
+                            Actor newTargetActor = targetActor;
+
+                            Log.Info($"just did damage after {GetTimestampDifferenceInSeconds(actor.last_attack_time, ctx.Timestamp)} secs");
+                            newActor.last_attack_time = ctx.Timestamp;
+
+                            ctx.Db.attack_cooldown.entity_id.Delete(actor.entity_id);
+                            ctx.Db.attack_cooldown.Insert(new()
+                            {
+                                entity_id = actor.entity_id,
+                                finishedTime = new Timestamp(attack.attack_start_time.MicrosecondsSinceUnixEpoch + (int)((1f / actor.attack_speed) * 1_000_000))
+                            });
+                            newAttack.attack_state = AttackState.Ready;
+
+                            newTargetActor.current_health -= 100;
+
+                            ctx.Db.actor.entity_id.Delete(targetActor.entity_id);
+                            ctx.Db.actor.Insert(newTargetActor);
+                        }
+                    }
+                    break;
+                case AttackState.Committed:
+                    
+                    break;
+                default:
+                    break;
+            }
+
+            ctx.Db.attacking.entity_id.Delete(attack.entity_id);
+            ctx.Db.attacking.Insert(newAttack);
+
+            ctx.Db.actor.entity_id.Delete(actor.entity_id);
+            ctx.Db.actor.Insert(newActor);
+            
+            Log.Info($"close enough, attacking because {entity.entity_id} is {DbVector2.Distance(entity.position, targetEntity.position)} away from {targetEntity.entity_id}");
         }
     }
 
@@ -225,34 +360,27 @@ public static partial class Module
         float velocity = (entity.last_position - entity.position).Magnitude();
 
         DbVector2 newPos;
-        float finalRotation;
         if (distance <= distanceToMove)
         {
             newPos = walker.target_walk_pos;
-            finalRotation = actor.rotation;
             ctx.Db.walking.entity_id.Delete(walker.entity_id);
         }
         else
         {
             newPos = new(entity.position.x + (direction.x * distanceToMove), entity.position.y + (direction.y * distanceToMove));
-            float rotationDegrees = MathF.Atan2(direction.x, direction.y) * 180 / MathF.PI;
-            finalRotation = rotationDegrees;
         }
+
+        float finalRotation = DbVector2.RotationFromDirection(direction);
         #endregion
 
         #region update entity and actor
 
+        Actor newActor = actor;
+
+        newActor.rotation = finalRotation;
+
         ctx.Db.actor.entity_id.Delete(walker.entity_id);
-        ctx.Db.actor.Insert(new Actor()
-        {
-            entity_id = walker.entity_id,
-            rotation = finalRotation,
-            current_health = actor.current_health,
-            max_health = actor.max_health,
-            team = actor.team,
-            attack_range = actor.attack_range,
-            attack_animation_time = actor.attack_animation_time
-        });
+        ctx.Db.actor.Insert(newActor);
 
 
         DbVector2 newLastPos = entity.position;
