@@ -8,6 +8,9 @@ public static partial class Module
 
     public const int TICK_LENGTH_MICROSECONDS = 30_000;
 
+    [Type]
+    public enum Team { Red, Blue, Neutral }
+
     [Table(Name = "player", Public = true)]
     [Table(Name = "logged_out_player", Public = true)]
     public partial struct Player
