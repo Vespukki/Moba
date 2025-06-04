@@ -39,6 +39,8 @@ public static partial class Module
 
         MoveAllPlayers(ctx);
         MakeAllAttacks(ctx);
+        DoAllBuffs(ctx);
+        DoAllActorUpkeep(ctx);
     }
 
     [Reducer(ReducerKind.ClientConnected)]

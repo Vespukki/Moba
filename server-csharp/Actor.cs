@@ -1,6 +1,4 @@
 ﻿using SpacetimeDB;
-using System;
-using System.Diagnostics;
 
 public static partial class Module
 {
@@ -20,18 +18,39 @@ public static partial class Module
         public float attack_speed;
         public float windup_percent; //percentage
         public Timestamp last_attack_time;
+        public float health_regen; //per 5 seconds
     }
 
-
+    [Reducer]
+    public static void DoAllActorUpkeep(ReducerContext ctx)
+    {
+        foreach (var actor in ctx.Db.actor.Iter())
+        {
+            DoHealthRegen(ctx, actor);
+        }
+    }
 
     [Reducer]
-    public static void SetActorHealth(ReducerContext ctx, uint entityId, float newMaxHealth, float newCurrentHealth)
+    public static void DoHealthRegen(ReducerContext ctx, Actor actor)
+    {
+        float totalHealthRegen = actor.health_regen;
+        foreach (Buff buff in ctx.Db.buff.entity_id_and_buff_type.Filter((actor.entity_id, "health_regen")))
+        {
+            totalHealthRegen += buff.value;
+        }
+
+        float healthToAdd = (totalHealthRegen / 5f) * (deltaTime.Microseconds / 1_000_000f);
+
+        if (healthToAdd != 0)
+        {
+            SetActorHealth(ctx, actor, actor.max_health, actor.current_health + healthToAdd);
+        }
+    }
+
+    [Reducer]
+    public static void SetActorHealth(ReducerContext ctx, Actor actor, float newMaxHealth, float newCurrentHealth)
     {
         Log.Info("Changing health");
-
-        var actor = ctx.Db.actor.entity_id.Find(entityId);
-
-        if (actor == null) return;
 
         if (newMaxHealth < 0) newMaxHealth = 0;
 
@@ -39,13 +58,12 @@ public static partial class Module
 
         else if (newCurrentHealth > newMaxHealth) newCurrentHealth = newMaxHealth;
 
-        ctx.Db.actor.entity_id.Delete(entityId);
-        ctx.Db.actor.Insert(new()
-        {
-            entity_id = actor.Value.entity_id,
-            rotation = actor.Value.rotation,
-            current_health = newCurrentHealth,
-            max_health = newMaxHealth
-        });
+        Actor newActor = actor;
+
+        newActor.current_health = newCurrentHealth;
+        newActor.max_health = newMaxHealth;
+
+        ctx.Db.actor.entity_id.Delete(actor.entity_id);
+        ctx.Db.actor.Insert(newActor);
     }
 }

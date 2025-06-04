@@ -1,4 +1,5 @@
 ﻿using SpacetimeDB;
+using SpacetimeDB.Internal.TableHandles;
 
 public static partial class Module
 {
@@ -12,7 +13,7 @@ public static partial class Module
         public uint attack_range;
     }
 
-
+    
 
     [Table(Name = "champion_instance", Public = true)]
     public partial struct ChampionInstance
@@ -73,7 +74,8 @@ public static partial class Module
             attack_range = champStats.attack_range,
             attack_speed = .69f,
             windup_percent = .13793f,
-            last_attack_time = ctx.Timestamp
+            last_attack_time = ctx.Timestamp,
+            health_regen = 0f
         });
 
         ChampionInstance newChamp = new()
@@ -83,7 +85,16 @@ public static partial class Module
             entity_id = newEntity.entity_id
         };
         Log.Info($"Entity id of new champ is {newEntity.entity_id}");
-        
+
+        ctx.Db.buff.Insert(new Buff()
+        {
+            start_timestamp = ctx.Timestamp,
+            duration = 5f,
+            entity_id = newEntity.entity_id,    
+            buff_type = "health_regen",
+            stacks = 0,
+            value = 200f
+        });
         
         ctx.Db.champion_instance.Insert(newChamp);
     }
@@ -95,6 +106,11 @@ public static partial class Module
         ctx.Db.champion_instance.entity_id.Delete(entityID);
         ctx.Db.actor.entity_id.Delete(entityID);
         ctx.Db.entity.entity_id.Delete(entityID);
+
+        foreach (var buff in ctx.Db.buff.entity_id.Filter(champ.entity_id))
+        {
+            ctx.Db.buff.buff_instance_id.Delete(buff.buff_instance_id);
+        }
     }
 
 }
