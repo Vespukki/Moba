@@ -150,17 +150,8 @@ public static partial class Module
     public static void SetTargetWalkPos(ReducerContext ctx, uint entityId, DbVector2 position, bool removeOtherActions = true)
     {
         ctx.Db.set_walk_target_timer.entity_id.Delete(entityId);
-        var nullableEntity = ctx.Db.entity.entity_id.Find(entityId);
 
-        if(nullableEntity == null)
-        {
-            Log.Info($"passed entity {entityId} is null");
-            return;
-        }
-
-        Entity entity = nullableEntity.Value;
-
-        var nullableAttacking = ctx.Db.attacking.entity_id.Find(entity.entity_id);
+        var nullableAttacking = ctx.Db.attacking.entity_id.Find(entityId);
 
         if(nullableAttacking != null)
         {
