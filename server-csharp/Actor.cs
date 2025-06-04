@@ -31,6 +31,19 @@ public static partial class Module
         public DbVector2 target_walk_pos;
     }
 
+    [Table(Name = "registered_hits", Public = true)]
+    public partial struct RegisteredHits
+    {
+        [PrimaryKey, Unique, AutoInc]
+        public uint hit_id;
+
+        [SpacetimeDB.Index.BTree]
+        public uint hit_entity_id;
+
+        [SpacetimeDB.Index.BTree]
+        public uint source_entity_id;
+    }
+
     [Type]
     public enum AttackState {Ready, Starting, Committed }
 
@@ -136,6 +149,7 @@ public static partial class Module
     [Reducer]
     public static void SetTargetWalkPos(ReducerContext ctx, uint entityId, DbVector2 position, bool removeOtherActions = true)
     {
+        ctx.Db.set_walk_target_timer.entity_id.Delete(entityId);
         var nullableEntity = ctx.Db.entity.entity_id.Find(entityId);
 
         if(nullableEntity == null)
@@ -161,7 +175,6 @@ public static partial class Module
 
             if (Math.Abs(timeUntilHit) < .4f * windupTime)
             {
-                ctx.Db.set_walk_target_timer.entity_id.Delete(entityId);
                 ctx.Db.set_walk_target_timer.Insert(new()
                 {
                     scheduled_at = new Timestamp(nullableAttacking.Value.attack_start_time.MicrosecondsSinceUnixEpoch + (int)(windupTime * 1.4f * 1_000_000f)),
@@ -176,29 +189,14 @@ public static partial class Module
         if (removeOtherActions) ctx.Db.attacking.entity_id.Delete(entityId);
 
 
-        var oldWalking = ctx.Db.walking.entity_id.Find(entityId);
-
-        if (oldWalking != null)
-        {
             var newWalking = new Walking()
             {
-                entity_id = oldWalking.Value.entity_id,
+                entity_id = entityId,
                 target_walk_pos = position
             };
 
             ctx.Db.walking.entity_id.Delete(entityId);
             ctx.Db.walking.Insert(newWalking);
-        }
-
-        else
-        {
-            var newWalking = new Walking()
-            {
-                entity_id = entityId,
-                target_walk_pos = position,
-            };
-            ctx.Db.walking.Insert(newWalking);
-        }
 
     }
 
@@ -237,7 +235,13 @@ public static partial class Module
 
         if (DbVector2.Distance(entity.position, targetEntity.position) > actor.attack_range)
         {
-            SetTargetWalkPos(ctx, entity.entity_id, targetEntity.position, false);
+            ctx.Db.walking.entity_id.Delete(attack.entity_id);
+            ctx.Db.walking.Insert(new()
+            {
+                entity_id = attack.entity_id,
+                target_walk_pos = targetEntity.position
+            });
+            //SetTargetWalkPos(ctx, entity.entity_id, targetEntity.position, false);
 
             Log.Info("too far, walking over there");
         }
@@ -284,6 +288,11 @@ public static partial class Module
 
                             Log.Info($"just did damage after {GetTimestampDifferenceInSeconds(actor.last_attack_time, ctx.Timestamp)} secs");
                             newActor.last_attack_time = ctx.Timestamp;
+                            ctx.Db.registered_hits.Insert(new()
+                            {
+                                hit_entity_id = targetActor.entity_id,
+                                source_entity_id = entity.entity_id
+                            });
 
                             ctx.Db.attack_cooldown.entity_id.Delete(actor.entity_id);
                             ctx.Db.attack_cooldown.Insert(new()

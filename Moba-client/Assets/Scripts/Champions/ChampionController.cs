@@ -1,7 +1,10 @@
+using NUnit.Framework;
 using SpacetimeDB.Types;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.VFX;
 
 public class ChampionController : ActorController
 {
@@ -15,6 +18,22 @@ public class ChampionController : ActorController
     protected override void Update()
     {
         base.Update();
+    }
+
+    public async void PlayVFX(HitVFX hitVfx)
+    {
+        Debug.Log("play vfx");
+        var vfx = Instantiate(hitVfx.hitVfxPrefab, centerTransform);
+
+        float timer = hitVfx.timer;
+
+        while (timer > 0)
+        {
+            await Task.Yield();
+            timer -= Time.deltaTime;
+        }
+
+        Destroy(vfx);
     }
 
     public void Initialize(Entity entity, Actor actor, ChampionInstance champ)

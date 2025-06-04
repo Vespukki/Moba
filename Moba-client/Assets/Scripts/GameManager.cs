@@ -2,9 +2,7 @@ using SpacetimeDB;
 using SpacetimeDB.Types;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEngine.Rendering.DebugUI.Table;
 
 public class GameManager : MonoBehaviour
 {
@@ -55,19 +53,27 @@ public class GameManager : MonoBehaviour
         LocalIdentity = identity;
 
         conn.Db.ChampionStats.OnInsert += ChampionStatsOnInsert;
+        
         conn.Db.Player.OnInsert += PlayerOnInsert;
         conn.Db.Player.OnDelete += PlayerOnDelete;
+        
         conn.Db.ChampionInstance.OnInsert += ChampionInstanceOnInsert;
         conn.Db.ChampionInstance.OnUpdate += ChampionInstanceOnUpdate;
+        
         conn.Db.Entity.OnUpdate += EntityOnUpdate;
+        
         conn.Db.Actor.OnUpdate += ActorOnUpdate;
         conn.Db.Actor.OnInsert += ActorOnInsert;
+        
         conn.Db.Walking.OnDelete += WalkingOnDelete;
         conn.Db.Walking.OnUpdate += WalkingOnUpdate;
         conn.Db.Walking.OnInsert += WalkingOnInsert;
+        
         conn.Db.Attacking.OnInsert += AttackingOnInsert;
         conn.Db.Attacking.OnUpdate += AttackingOnUpdate;
         conn.Db.Attacking.OnDelete += AttackingOnDelete;
+
+        conn.Db.RegisteredHits.OnInsert += RegisteredHitsOnInsert;
 
         OnConnected?.Invoke();
 
@@ -75,6 +81,15 @@ public class GameManager : MonoBehaviour
         Conn.SubscriptionBuilder()
             .OnApplied(HandleSubscriptionApplied)
             .SubscribeToAllTables();
+    }
+
+    private void RegisteredHitsOnInsert(EventContext context, RegisteredHits row)
+    {
+        if (championInstances.TryGetValue(row.HitEntityId, out ChampionController hitChamp)
+            && championInstances.TryGetValue(row.SourceEntityId, out ChampionController sourceChamp))
+        {
+            hitChamp.PlayVFX(sourceChamp.hitVfx);
+        }
     }
 
     private void AttackingOnDelete(EventContext context, Attacking row)

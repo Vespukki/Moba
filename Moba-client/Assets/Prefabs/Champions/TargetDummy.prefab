@@ -31,6 +31,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 7622920568519302288}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &4472344028510498846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5755406950635601242}
+  m_Layer: 6
+  m_Name: CenterTransform
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5755406950635601242
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4472344028510498846}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 118.4, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7622920568519302288}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &7944548354906782587
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -401,6 +432,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 57760bdf36966e141ab82620879caf8e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5293243197554569877}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 57760bdf36966e141ab82620879caf8e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5755406950635601242}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 57760bdf36966e141ab82620879caf8e, type: 3}
       insertIndex: -1
@@ -453,12 +487,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lerpTimer: 0
   lerpAmount: 0.01
+  entityId: 0
+  hitVfx:
+    hitVfxPrefab: {fileID: 0}
+    timer: 0
   team: 0
   healthBarPrefab: {fileID: 2242735179602747154, guid: 8a9ebd27f2f455d48bef80dfad827d28, type: 3}
   healthBarTarget: {fileID: 5293243197554569877}
+  animator: {fileID: 0}
   maxRotation: 10
   smr: {fileID: 9021258889095607742}
-  owner: 0
+  centerTransform: {fileID: 5755406950635601242}
+  ownerPlayerId: 0
 --- !u!136 &7900516957656330977
 CapsuleCollider:
   m_ObjectHideFlags: 0

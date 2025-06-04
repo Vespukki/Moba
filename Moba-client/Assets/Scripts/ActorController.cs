@@ -17,9 +17,13 @@ public class ActorController : EntityController
 
     [SerializeField] SkinnedMeshRenderer smr;
     Color originalColor;
+
+    public Transform centerTransform;
+
     protected override void Awake()
     {
         base.Awake();
+        if (centerTransform == null) centerTransform = transform;
         originalColor = smr.material.color;
 
         animator = GetComponent<Animator>();
@@ -43,10 +47,10 @@ public class ActorController : EntityController
         rotationLerpTarget = newActor.Rotation;
 
         healthBar.UpdateHealth(newActor);
-        if (newActor.CurrentHealth != oldActor.CurrentHealth)
+        /*if (newActor.CurrentHealth != oldActor.CurrentHealth)
         {
             FlashRed(500);
-        }
+        }*/
     }
 
     public async void FlashRed(int msDelay)

@@ -17,6 +17,15 @@ public class EntityController : MonoBehaviour
 
     private float moveSpeed = 250;
 
+    [System.Serializable]
+    public struct HitVFX
+    {
+        public GameObject hitVfxPrefab;
+        public float timer;
+    }
+
+    public HitVFX hitVfx;
+
     protected virtual void Start()
     {
 
