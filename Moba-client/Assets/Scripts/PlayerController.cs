@@ -2,6 +2,7 @@ using SpacetimeDB.Types;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SocialPlatforms;
 
 public class PlayerController : MonoBehaviour
@@ -11,27 +12,27 @@ public class PlayerController : MonoBehaviour
 
     public LayerMask layerMask;
 
-    public Material highlightMat;
+    public Transform mouseTransform;
 
     public Team team;
 
-    private ActorController _currentHighlight;
+    private IHoverable _currentHover;
 
     public List<uint> ownedEntities;
-    public ActorController CurrentHighlight
+    public IHoverable CurrentHover
     {
         get
         {
-            return _currentHighlight;
+            return _currentHover;
         }
         set
         {
-            if (_currentHighlight == value) return;
-            _currentHighlight?.RemoveOutline();
-            _currentHighlight = value;
+            if (_currentHover == value) return;
+            _currentHover?.EndHover();
+            _currentHover = value;
             if (value != null)
             {
-                value.SetOutline(highlightMat);
+                value.BeginHover();
             }
         }
     }
@@ -46,16 +47,67 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void HandleMousePos()
     {
-        if (Local != this) return;
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = Input.mousePosition
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        foreach (var result in results)
+        {
+            Debug.Log("UI element hit: " + result.gameObject.name);
+        }
+
+        List<RaycastResult> uiHits = new();
+
+        foreach (var result in results)
+        {
+            if (result.gameObject.CompareTag("UI"))
+            {
+                uiHits.Add(result);
+            }
+        }
+
+        
+        if (uiHits.Count > 0)
+        {
+            uiHits.Sort((a, b) => a.distance.CompareTo(b.distance));
+
+            for (int i = 0; i < uiHits.Count(); i++)
+            {
+                var uiHit = uiHits[i];
+
+                if (uiHit.gameObject.TryGetComponent(out IHoverable hover))
+                {
+                    CurrentHover = hover;
+                    return;
+                }
+            }
+
+            CurrentHover = null;
+            return;
+        }
+
+
+        //past here we assert that there are no interactable UI elements under the mouse
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
         List<RaycastHit> hits = Physics.RaycastAll(ray, Mathf.Infinity, layerMask).ToList();
         hits.Sort((a, b) => a.distance.CompareTo(b.distance));
-        for(int i = 0; i < hits.Count; i++)
+
+        for (int i = 0; i < hits.Count; i++)
+        {
+            RaycastHit newHit = hits[i];
+            Debug.Log($"hit {newHit.collider.tag} at dist {newHit.distance}");
+        }
+
+        for (int i = 0; i < hits.Count; i++)
         {
             hit = hits[i];
 
@@ -84,7 +136,8 @@ public class PlayerController : MonoBehaviour
                 }
             }
 
-            CurrentHighlight = newCurrentHighlight;
+            CurrentHover = newCurrentHighlight;
+            
 
             if (Input.GetMouseButtonDown(1))
             {
@@ -119,13 +172,25 @@ public class PlayerController : MonoBehaviour
                         consumedRay = true;
                         break;
 
+                    case "UI":
+                        consumedRay = true;
+                        break;
                     default:
                         break;
                 }
 
             }
 
-            if (consumedRay) break;
+            if (consumedRay) return;
         }
+    }
+
+
+    private void Update()
+    {
+        if (Local != this) return;
+
+        mouseTransform.position = Input.mousePosition;
+        HandleMousePos();
     }
 }

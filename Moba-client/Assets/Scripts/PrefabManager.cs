@@ -1,4 +1,5 @@
 using SpacetimeDB.Types;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ public class PrefabManager : MonoBehaviour
     public Dictionary<string, GameObject> idsToChampPrefabs = new();
     [SerializeField] GameObject fioraPrefab;
     [SerializeField] GameObject dummyPrefab;
+    [SerializeField] GameObject buffDisplayPrefab;
 
     private void Awake()
     {
@@ -50,5 +52,12 @@ public class PrefabManager : MonoBehaviour
             Debug.LogError($"no prefab found for champ ID {champ.ChampId}");
             return null;
         }
+    }
+
+    internal static GameObject SpawnBuffDisplay(Buff buff, Transform buffHolder)
+    {
+        BuffDisplay buffDisplay = Instantiate(Instance.buffDisplayPrefab, buffHolder).GetComponent<BuffDisplay>();
+        buffDisplay.Initialize(buff);
+        return buffDisplay.gameObject;
     }
 }

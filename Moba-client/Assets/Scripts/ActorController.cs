@@ -1,10 +1,13 @@
 using SpacetimeDB.Types;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class ActorController : EntityController
+public class ActorController : EntityController, IHoverable
 {
     protected float rotationLerpTarget;
+    
+    public Material outlineMat;
 
     public Team team;
 
@@ -19,6 +22,31 @@ public class ActorController : EntityController
     Color originalColor;
 
     public Transform centerTransform;
+
+    private List<Buff> buffs = new();
+
+    public delegate void BuffChangeDelegate(ActorController actor, Buff buff);
+
+    public static event BuffChangeDelegate OnBuffAdded;
+    public static event BuffChangeDelegate OnBuffRemoved;
+
+    public List<Buff> GetBuffs()
+    {
+        return buffs;
+    }
+    public void AddBuff(Buff buff)
+    {
+        if (buffs.Contains(buff)) return;
+
+        OnBuffAdded?.Invoke(this, buff);
+        buffs.Add(buff);
+    }
+
+    public void RemoveBuff(Buff buff)
+    {
+        OnBuffRemoved?.Invoke(this, buff);
+        buffs.Remove(buff);
+    }
 
     protected override void Awake()
     {
@@ -35,6 +63,7 @@ public class ActorController : EntityController
         
     }
 
+    
     public void InsertActor(Actor newActor)
     {
         rotationLerpTarget = newActor.Rotation;
@@ -78,7 +107,7 @@ public class ActorController : EntityController
     }
 
 
-    public void SetOutline(Material outlineMat)
+    public void BeginHover()
     {
         Debug.Log("setting outline");
 
@@ -96,7 +125,7 @@ public class ActorController : EntityController
 
     }
 
-    public void RemoveOutline()
+    public void EndHover()
     {
         var mats = smr.materials;
         Material[] updatedMaterials = new Material[mats.Length - 1];
@@ -111,6 +140,8 @@ public class ActorController : EntityController
 
     protected override void Update()
     {
+        Debug.Log(buffs.Count);
+
         base.Update();
         HealthBarManager.Instance.SetHealthBarPosition(healthBar, healthBarTarget);
         if (animator != null)
@@ -127,8 +158,4 @@ public class ActorController : EntityController
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, finalRotation, transform.rotation.eulerAngles.z);
     }
 
-   /* public void UpdateAttack(Attacking attack)
-    {
-
-    }*/
 }

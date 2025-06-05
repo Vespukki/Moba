@@ -86,17 +86,21 @@ public static partial class Module
         };
         Log.Info($"Entity id of new champ is {newEntity.entity_id}");
 
+       
+        ctx.Db.champion_instance.Insert(newChamp);
+
         ctx.Db.buff.Insert(new Buff()
         {
             start_timestamp = ctx.Timestamp,
             duration = 5f,
-            entity_id = newEntity.entity_id,    
+            entity_id = newEntity.entity_id,
             buff_type = "health_regen",
             stacks = 0,
-            value = 200f
+            value = 200f,
+            buff_id = "red_buff",
+            buff_name = "Crest of Cinders"
         });
-        
-        ctx.Db.champion_instance.Insert(newChamp);
+
     }
 
     [Reducer]

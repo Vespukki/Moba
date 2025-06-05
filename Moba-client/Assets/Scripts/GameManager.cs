@@ -12,12 +12,15 @@ public class GameManager : MonoBehaviour
     public static event Action OnConnected;
     public static event Action OnSubscriptionApplied;
 
+    public BuffManager localBuffManager;
     public static GameManager Instance { get; private set; }
     public static Identity LocalIdentity { get; private set; }
     public static uint LocalPlayerId { get; private set; }
     public static DbConnection Conn { get; private set; }
 
     public Dictionary<uint, ChampionController> championInstances = new();
+    public Dictionary<uint, Buff> buffsByBuffId = new();
+    public Dictionary<uint, List<Buff>> buffsByEntityId = new(); //EntityID = 0 means its pending an assignment (or maybe its lost?)
 
     private void Start()
     {
@@ -56,7 +59,10 @@ public class GameManager : MonoBehaviour
         
         conn.Db.Player.OnInsert += PlayerOnInsert;
         conn.Db.Player.OnDelete += PlayerOnDelete;
-        
+
+        conn.Db.Buff.OnInsert += BuffOnInsert;
+        conn.Db.Buff.OnInsert += BuffOnDelete;
+
         conn.Db.ChampionInstance.OnInsert += ChampionInstanceOnInsert;
         conn.Db.ChampionInstance.OnUpdate += ChampionInstanceOnUpdate;
         
@@ -75,12 +81,67 @@ public class GameManager : MonoBehaviour
 
         conn.Db.RegisteredHits.OnInsert += RegisteredHitsOnInsert;
 
+
+
         OnConnected?.Invoke();
 
         // Request all tables
         Conn.SubscriptionBuilder()
             .OnApplied(HandleSubscriptionApplied)
             .SubscribeToAllTables();
+    }
+
+    private void BuffOnDelete(EventContext context, Buff buff)
+    {
+        buffsByBuffId.Remove(buff.BuffInstanceId);
+        if (championInstances.TryGetValue(buff.EntityId, out ChampionController champ))
+        {
+            champ.RemoveBuff(buff);
+
+            if (buffsByEntityId.TryGetValue(champ.entityId, out List<Buff> buffs))
+            {
+                buffs.Remove(buff);
+            }
+            else
+            {
+                Debug.LogError("tried to remove buff from champion that didnt have a buff list, so something aint right");
+            }
+          
+        }
+    }
+
+    private void BuffOnInsert(EventContext context, Buff buff)
+    {
+        Debug.Log("buff added");
+        buffsByBuffId.Add(buff.BuffInstanceId, buff);
+        if (championInstances.TryGetValue(buff.EntityId, out ChampionController champ))
+        {
+            champ.AddBuff(buff);
+
+
+            if (buffsByEntityId.TryGetValue(champ.entityId, out List<Buff> buffs))
+            {
+                buffs.Add(buff);
+            }
+            else
+            {
+                var newList = new List<Buff>() { buff };
+                buffsByEntityId.Add(champ.entityId, newList);
+            }
+        }
+        else
+        {
+            //assume the champion hasnt spawned yet I guess
+            if (buffsByEntityId.TryGetValue(0, out List<Buff> buffs))
+            {
+                buffs.Add(buff);
+            }
+            else
+            {
+                var newList = new List<Buff>() { buff };
+                buffsByEntityId.Add(0, newList);
+            }
+        }
     }
 
     private void RegisteredHitsOnInsert(EventContext context, RegisteredHits row)
@@ -174,18 +235,48 @@ public class GameManager : MonoBehaviour
         Entity entity = ctx.Db.Entity.EntityId.Find(champ.EntityId);
         Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
 
+        var spawned = PrefabManager.SpawnChampion(entity, actor, champ);
+        championInstances.Add(champ.EntityId, spawned);
+
+
         if (champ.PlayerId == LocalPlayerId)
         {
             PlayerController.Local.ownedEntities.Add(champ.EntityId);
+            localBuffManager.Initialize(spawned);
         }
 
-        championInstances.Add(champ.EntityId, PrefabManager.SpawnChampion(entity, actor, champ));
-        Debug.Log("CHAMPION CREATED");
+        List<Buff> buffsToMoveOver = new();
+        foreach (var buff in buffsByEntityId[0]) //the unassigned ones
+        {
+            if (buff.EntityId == champ.EntityId)
+            {
+                buffsToMoveOver.Add(buff);
+            }
+        }
+
+        foreach (var buff in buffsToMoveOver)
+        {
+            
+            buffsByEntityId.Remove(buff.BuffInstanceId);
+            ChampionController champController = championInstances[champ.EntityId];
+            champController.AddBuff(buff);
+            if (buffsByEntityId.TryGetValue(champ.EntityId, out List<Buff> buffs))
+            {
+                buffs.Add(buff);
+            }
+            else
+            {
+                var newList = new List<Buff>() { buff };
+                buffsByEntityId.Add(champ.EntityId, newList);
+
+            }
+        }
     }
 
     private void PlayerOnInsert(EventContext ctx, Player player)
     {
         if (player.Identity != LocalIdentity) return;
+        LocalPlayerId = player.PlayerId;
 
         var playerController = PrefabManager.SpawnPlayer(player);
 
@@ -195,11 +286,11 @@ public class GameManager : MonoBehaviour
             if (champ.ownerPlayerId == player.PlayerId)
             {
                 playerController.ownedEntities.Add(champ.entityId);
+                localBuffManager.Initialize(champ);
             }
         }
 
         Debug.Log($"Spawning player: {player.PlayerId}");
-        LocalPlayerId = player.PlayerId;
     }
 
     void ChampionStatsOnInsert(EventContext ctx, ChampionStats addedvalue)

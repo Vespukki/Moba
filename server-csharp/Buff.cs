@@ -11,6 +11,11 @@ public static partial class Module
 
         [SpacetimeDB.Index.BTree]
         public uint entity_id;
+
+        public string buff_id;
+
+        public string buff_name;
+        
         public string buff_type;
         public float duration;
         public Timestamp start_timestamp;

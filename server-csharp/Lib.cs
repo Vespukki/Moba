@@ -46,30 +46,25 @@ public static partial class Module
     [Reducer(ReducerKind.ClientConnected)]
     public static void Connect(ReducerContext ctx)
     {
-        // Try to find existing player in logged_out table
         var loggedOutPlayer = ctx.Db.logged_out_player.identity.Find(ctx.Sender);
         Player player;
 
         if (loggedOutPlayer != null)
         {
-            // Move from logged_out to active players
             player = loggedOutPlayer.Value;
             ctx.Db.player.Insert(player);
             ctx.Db.logged_out_player.identity.Delete(player.identity);
         }
         else
         {
-            // Create new player - DO NOT set player_id manually
             player = new Player
             {
                 identity = ctx.Sender,
                 name = "",
                 team = Team.Blue
             };
-            ctx.Db.player.Insert(player);
+            player = ctx.Db.player.Insert(player);
 
-            // Need to re-query to get the auto-assigned ID
-            player = ctx.Db.player.identity.Find(ctx.Sender).Value;
         }
         var champ = new ChampionInstance
         {
