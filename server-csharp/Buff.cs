@@ -15,7 +15,9 @@ public static partial class Module
         public string buff_id;
 
         public string buff_name;
-        
+        public string buff_description;
+        public string source;
+
         public string buff_type;
         public float duration;
         public Timestamp start_timestamp;

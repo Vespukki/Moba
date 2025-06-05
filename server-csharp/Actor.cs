@@ -9,7 +9,8 @@ public static partial class Module
     {
         [PrimaryKey, Unique]
         public uint entity_id;
-        //public uint statblock_id;
+        public string name;
+
         public float rotation;
         public float current_health;
         public float max_health;

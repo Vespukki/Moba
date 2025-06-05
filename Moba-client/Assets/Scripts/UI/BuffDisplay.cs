@@ -1,5 +1,6 @@
 using SpacetimeDB.Types;
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -11,6 +12,8 @@ public class BuffDisplay : MonoBehaviour, IHoverable
     public Buff buff;
     public GameObject infoDisplayPrefab;
 
+    public TextMeshProUGUI stackText;
+
     private InfoDisplayUI infoDisplayInstance;
 
     public void BeginHover()
@@ -18,7 +21,7 @@ public class BuffDisplay : MonoBehaviour, IHoverable
         if (infoDisplayInstance == null)
         {
             infoDisplayInstance = Instantiate(infoDisplayPrefab, PlayerController.Local.mouseTransform).GetComponent<InfoDisplayUI>();
-            infoDisplayInstance.Initialize(buff.BuffName);
+            infoDisplayInstance.Initialize(buff.BuffName, buff.BuffDescription, buff.Source);
         }
     }
 
@@ -33,18 +36,19 @@ public class BuffDisplay : MonoBehaviour, IHoverable
     internal void Initialize(Buff newBuff)
     {
         buff = newBuff;
+        stackText.text = newBuff.Stacks.ToString();
         if (SpriteManager.spriteLookup.TryGetValue(newBuff.BuffId, out Sprite sprite))
         {
             buffImage.sprite = sprite;
         }
         else
         {
-            LoadSpriteAsync(newBuff);
+            LoadBuffSpriteAsync(newBuff);
         }
 
     }
 
-    private async void LoadSpriteAsync(Buff buff)
+    private async void LoadBuffSpriteAsync(Buff buff)
     {
         AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(buff.BuffId);
         await handle.Task;

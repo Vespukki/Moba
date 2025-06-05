@@ -67,6 +67,7 @@ public static partial class Module
         var newActor = ctx.Db.actor.Insert(new Actor()
         {
             entity_id = newEntity.entity_id,
+            name = "Fiora",
             max_health = 2000f,
             current_health = 1000f,
             rotation = 0,
@@ -98,7 +99,11 @@ public static partial class Module
             stacks = 0,
             value = 200f,
             buff_id = "red_buff",
-            buff_name = "Crest of Cinders"
+            buff_name = "Crest of Cinders",
+            buff_description = "This unit recovers health when not fighting champions or epic monsters. Also, their basic\n" +
+            "attacks burn and slow the target over several seconds.",
+            source = newActor.name
+
         });
 
     }
