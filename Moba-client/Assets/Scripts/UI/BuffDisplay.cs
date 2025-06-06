@@ -11,6 +11,7 @@ public class BuffDisplay : MonoBehaviour, IHoverable
 {
     public Image buffImage;
     public Buff buff;
+    public BuffDisplayInfo buffInfo;
     public GameObject infoDisplayPrefab;
 
     public TextMeshProUGUI stackText;
@@ -19,14 +20,13 @@ public class BuffDisplay : MonoBehaviour, IHoverable
 
     public Transform durationIndicator;
 
-    public float timeSinceStart = 0;
 
     public void BeginHover()
     {
         if (infoDisplayInstance == null)
         {
             infoDisplayInstance = Instantiate(infoDisplayPrefab, PlayerController.Local.mouseTransform).GetComponent<InfoDisplayUI>();
-            infoDisplayInstance.Initialize(buff.BuffName, buff.BuffDescription, buff.Source);
+            infoDisplayInstance.Initialize(buffInfo.buffName, buffInfo.buffDescription, buff.Source);
         }
     }
 
@@ -39,15 +39,22 @@ public class BuffDisplay : MonoBehaviour, IHoverable
     }
 
 
-    internal void Initialize(Buff newBuff)
+    internal void Initialize(Buff newBuff, BuffDisplayInfo info)
     {
         GameManager.Instance.buffIdToBuffDisplay.Add(newBuff.BuffInstanceId, this);
 
-        
-
-
+        buffInfo = info;
         buff = newBuff;
-        stackText.text = newBuff.Stacks.ToString();
+
+        if (newBuff.Stacks == 0 && !info.showZeroStacks)
+        {
+            stackText.text = "";
+        }
+        else
+        {
+            stackText.text = newBuff.Stacks.ToString();
+        }
+
         if (SpriteManager.spriteLookup.TryGetValue(newBuff.BuffId, out Sprite sprite))
         {
             buffImage.sprite = sprite;
@@ -85,7 +92,7 @@ public class BuffDisplay : MonoBehaviour, IHoverable
 
     private async void LoadBuffSpriteAsync(Buff buff)
     {
-        AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(buff.BuffId);
+        AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(buff.BuffId.ToString());
         await handle.Task;
 
         if (handle.Status == AsyncOperationStatus.Succeeded)

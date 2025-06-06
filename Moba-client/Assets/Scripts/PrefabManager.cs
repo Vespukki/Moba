@@ -54,10 +54,10 @@ public class PrefabManager : MonoBehaviour
         }
     }
 
-    internal static GameObject SpawnBuffDisplay(Buff buff, Transform buffHolder)
+    internal static GameObject SpawnBuffDisplay(Buff buff, BuffDisplayInfo info, Transform buffHolder)
     {
         BuffDisplay buffDisplay = Instantiate(Instance.buffDisplayPrefab, buffHolder).GetComponent<BuffDisplay>();
-        buffDisplay.Initialize(buff);
+        buffDisplay.Initialize(buff, info);
         return buffDisplay.gameObject;
     }
 }

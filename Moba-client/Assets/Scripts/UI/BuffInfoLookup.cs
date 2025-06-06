@@ -1,14 +1,20 @@
 using System.Collections.Generic;
 using UnityEngine;
+using SpacetimeDB;
+using SpacetimeDB.Types;
 
 public static class BuffInfoLookup
 {
-    private static Dictionary<string, BuffDisplayInfo> buffIdToDisplayInfo = new()
+    private static Dictionary<BuffId, BuffDisplayInfo> buffIdToDisplayInfo = new()
     {
-        {"red_buff_regen", new(false, false)}
+        {
+            BuffId.RedBuff, new(true, false, "Crest of Cinders",
+            "This unit recovers health when not fighting champions or epic monsters. Also, their basic\n" +
+            "attacks burn and slow the target over several seconds."
+            )}
     };
 
-    public static BuffDisplayInfo GetInfo(string buffId)
+    public static BuffDisplayInfo GetInfo(BuffId buffId)
     {
         if (buffIdToDisplayInfo.TryGetValue(buffId, out BuffDisplayInfo displayInfo))
         {
@@ -16,7 +22,7 @@ public static class BuffInfoLookup
         }
         else
         {
-            return new(true, false);
+            return new(false,false, "","shouldn't be seeing this!!!");
         }
     }
 }
@@ -25,10 +31,14 @@ public struct BuffDisplayInfo
 {
     public bool visible;
     public bool showZeroStacks;
+    public string buffName;
+    public string buffDescription;
 
-    public BuffDisplayInfo(bool visible = true, bool showZeroStacks = false)
+    public BuffDisplayInfo(bool visible, bool showZeroStacks, string buffName, string buffDescription)
     {
         this.visible = visible;
         this.showZeroStacks = showZeroStacks;
+        this.buffName = buffName;
+        this.buffDescription = buffDescription;
     }
 }

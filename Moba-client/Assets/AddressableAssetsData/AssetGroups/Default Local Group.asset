@@ -16,7 +16,7 @@ MonoBehaviour:
   m_GUID: 67f2a2eccacea9747bb5dc1547a2619b
   m_SerializeEntries:
   - m_GUID: f520ac418d4c0bb47b9d951c56f4c62b
-    m_Address: red_buff
+    m_Address: RedBuff
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

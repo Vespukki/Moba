@@ -37,9 +37,11 @@ public class BuffManager : MonoBehaviour
     {
         if (actor != target) return;
 
-        if (BuffInfoLookup.GetInfo(buff.BuffId).visible)
+        BuffDisplayInfo displayInfo = BuffInfoLookup.GetInfo(buff.BuffId);
+
+        if (displayInfo.visible)
         {
-            var spawned = PrefabManager.SpawnBuffDisplay(buff, buffHolder);
+            var spawned = PrefabManager.SpawnBuffDisplay(buff, displayInfo ,buffHolder);
             buffObjects.Add(buff, spawned);
         }
     }

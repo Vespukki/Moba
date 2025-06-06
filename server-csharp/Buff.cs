@@ -3,17 +3,20 @@ using System.Diagnostics;
 
 public static partial class Module
 {
+    [Type]
+    public enum BuffId {RedBuff, RedBuffRegen, RedBuffOnHit };
+    public enum BuffType {HealthRegen };
+
     [Table(Name = "buff", Public = true)]
     [SpacetimeDB.Index.BTree(Name = "entity_id_and_buff_type", Columns = new[] { nameof(entity_id), nameof(buff_type) })]
-    public partial struct Buff(uint entity_id, string buff_id, Timestamp start_timestamp, float duration, 
-        string buff_type = "", float value = 0, int stacks = 0, string buff_name = "", string buff_description = "", string source = "", uint buff_instance_id = 0)
+    public partial struct Buff(uint entity_id, BuffId buff_id, Timestamp start_timestamp, float duration, 
+        string buff_type = "", float value = 0, int stacks = 0, string source = "", uint buff_instance_id = 0)
     {
-      
 
         [SpacetimeDB.Index.BTree]
         public uint entity_id = entity_id;
 
-        public string buff_id = buff_id; //E.G. red_buff
+        public BuffId buff_id = buff_id; //E.G. red_buff
         public Timestamp start_timestamp = start_timestamp;
         public float duration = duration;
 
@@ -23,8 +26,6 @@ public static partial class Module
         public float value = value;
         public int stacks = stacks;
 
-        public string buff_name = buff_name;
-        public string buff_description = buff_description;
         public string source = source;
 
         [Unique, AutoInc, PrimaryKey]
@@ -37,7 +38,8 @@ public static partial class Module
     {
         if (GetTimestampDifferenceInSeconds(ctx.Timestamp, buff.start_timestamp) >= buff.duration)
         {
-            ctx.Db.buff.buff_instance_id.Delete(buff.buff_instance_id);
+            DeleteBuff(ctx, buff);
+            
         }
         else
         {
@@ -77,7 +79,7 @@ public static partial class Module
 
         switch (buff.buff_id)
         {
-            case "red_buff_regen":
+            case BuffId.RedBuffRegen:
                 newBuff.value = RedBuffRegenCalculation(ctx, buff);
                 break;
 
@@ -93,8 +95,7 @@ public static partial class Module
     [Reducer]
     public static void CreateRedBuffComponents(ReducerContext ctx, Buff redBuff)
     {
-        Buff healingComponent = new(redBuff.entity_id, "red_buff_regen", redBuff.start_timestamp, redBuff.duration, buff_type: "health_regen");
-
+        Buff healingComponent = new(redBuff.entity_id, BuffId.RedBuffRegen, redBuff.start_timestamp, redBuff.duration, buff_type: "health_regen");
         Buff newHealingBuff = ctx.Db.buff.Insert(healingComponent);
         UpdateBuffValue(ctx, newHealingBuff);
     }
@@ -103,7 +104,7 @@ public static partial class Module
     {
         switch (buff.buff_id)
         {
-            case "red_buff":
+            case BuffId.RedBuff:
                 CreateRedBuffComponents(ctx, buff);
                 break;
 
@@ -114,8 +115,9 @@ public static partial class Module
         ctx.Db.buff.Insert(buff);
     }
 
-    public static void DeleteBuff()
+    [Reducer]
+    public static void DeleteBuff(ReducerContext ctx, Buff buff)
     {
-
+        ctx.Db.buff.buff_instance_id.Delete(buff.buff_instance_id);
     }
 }

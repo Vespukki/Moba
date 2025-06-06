@@ -299,7 +299,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        Debug.Log($"Spawning player: {player.PlayerId}");
     }
 
     void ChampionStatsOnInsert(EventContext ctx, ChampionStats addedvalue)
