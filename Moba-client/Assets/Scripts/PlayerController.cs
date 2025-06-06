@@ -104,7 +104,6 @@ public class PlayerController : MonoBehaviour
         for (int i = 0; i < hits.Count; i++)
         {
             RaycastHit newHit = hits[i];
-            Debug.Log($"hit {newHit.collider.tag} at dist {newHit.distance}");
         }
 
         for (int i = 0; i < hits.Count; i++)

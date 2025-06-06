@@ -19,7 +19,8 @@ public class GameManager : MonoBehaviour
     public static DbConnection Conn { get; private set; }
 
     public Dictionary<uint, ChampionController> championInstances = new();
-    public Dictionary<uint, Buff> buffsByBuffId = new();
+    /*public Dictionary<uint, Buff> buffsByBuffId = new();*/
+    public Dictionary<uint, BuffDisplay> buffIdToBuffDisplay = new();
     public Dictionary<uint, List<Buff>> buffsByEntityId = new(); //EntityID = 0 means its pending an assignment (or maybe its lost?)
 
     private void Start()
@@ -61,7 +62,8 @@ public class GameManager : MonoBehaviour
         conn.Db.Player.OnDelete += PlayerOnDelete;
 
         conn.Db.Buff.OnInsert += BuffOnInsert;
-        conn.Db.Buff.OnInsert += BuffOnDelete;
+        conn.Db.Buff.OnDelete += BuffOnDelete;
+        conn.Db.Buff.OnUpdate += BuffOnUpdate;
 
         conn.Db.ChampionInstance.OnInsert += ChampionInstanceOnInsert;
         conn.Db.ChampionInstance.OnUpdate += ChampionInstanceOnUpdate;
@@ -91,9 +93,17 @@ public class GameManager : MonoBehaviour
             .SubscribeToAllTables();
     }
 
+    private void BuffOnUpdate(EventContext context, Buff oldRow, Buff newRow)
+    {
+        /*if (buffIdToBuffDisplay.TryGetValue(oldRow.BuffInstanceId, out BuffDisplay display))
+        {
+            display.UpdateBuff(newRow, context.Event.Time);
+        }*/
+    }
+
     private void BuffOnDelete(EventContext context, Buff buff)
     {
-        buffsByBuffId.Remove(buff.BuffInstanceId);
+        Debug.Log("buff removed");
         if (championInstances.TryGetValue(buff.EntityId, out ChampionController champ))
         {
             champ.RemoveBuff(buff);
@@ -113,7 +123,6 @@ public class GameManager : MonoBehaviour
     private void BuffOnInsert(EventContext context, Buff buff)
     {
         Debug.Log("buff added");
-        buffsByBuffId.Add(buff.BuffInstanceId, buff);
         if (championInstances.TryGetValue(buff.EntityId, out ChampionController champ))
         {
             champ.AddBuff(buff);

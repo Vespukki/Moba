@@ -1,3 +1,4 @@
+using SpacetimeDB;
 using SpacetimeDB.Types;
 using System;
 using TMPro;
@@ -16,6 +17,10 @@ public class BuffDisplay : MonoBehaviour, IHoverable
 
     private InfoDisplayUI infoDisplayInstance;
 
+    public Transform durationIndicator;
+
+    public float timeSinceStart = 0;
+
     public void BeginHover()
     {
         if (infoDisplayInstance == null)
@@ -33,8 +38,22 @@ public class BuffDisplay : MonoBehaviour, IHoverable
         }
     }
 
+   /* public void UpdateBuff(Buff buff, Timestamp currentTimestamp)
+    {
+        float timeSinceStart = currentTimestamp.TimeDurationSince(buff.StartTimestamp).Microseconds / 1_000_000f;
+
+        float durationPercent = timeSinceStart / buff.Duration;
+
+        durationIndicator.rotation = Quaternion.Euler(0, 0, (durationPercent / 100f) * 360f);
+    }*/
+
     internal void Initialize(Buff newBuff)
     {
+        GameManager.Instance.buffIdToBuffDisplay.Add(newBuff.BuffInstanceId, this);
+
+        
+
+
         buff = newBuff;
         stackText.text = newBuff.Stacks.ToString();
         if (SpriteManager.spriteLookup.TryGetValue(newBuff.BuffId, out Sprite sprite))
@@ -46,6 +65,31 @@ public class BuffDisplay : MonoBehaviour, IHoverable
             LoadBuffSpriteAsync(newBuff);
         }
 
+    }
+
+    private void Update()
+    {
+        if (buff == null) return;
+
+        DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        long cur_time = (long)((System.DateTime.UtcNow - epochStart).TotalMilliseconds * 1000);
+
+        long elapsedTime = cur_time - buff.StartTimestamp.MicrosecondsSinceUnixEpoch;
+
+        float elapsedTimeSeconds = (float)((double)elapsedTime / (double)1_000_000);
+
+        float durationPercent = elapsedTimeSeconds / buff.Duration;
+        Debug.Log($"buff duration percent is {durationPercent}");
+
+        durationIndicator.rotation = Quaternion.Euler(0, 0, durationPercent * -360f);
+    }
+
+    private void OnDestroy()
+    {
+        if (buff != null)
+        {
+            GameManager.Instance.buffIdToBuffDisplay.Remove(buff.BuffInstanceId);
+        }
     }
 
     private async void LoadBuffSpriteAsync(Buff buff)
