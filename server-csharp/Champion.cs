@@ -90,21 +90,12 @@ public static partial class Module
        
         ctx.Db.champion_instance.Insert(newChamp);
 
-        ctx.Db.buff.Insert(new Buff()
-        {
-            start_timestamp = ctx.Timestamp,
-            duration = 5f,
-            entity_id = newEntity.entity_id,
-            buff_type = "health_regen",
-            stacks = 0,
-            value = 200f,
-            buff_id = "red_buff",
-            buff_name = "Crest of Cinders",
-            buff_description = "This unit recovers health when not fighting champions or epic monsters. Also, their basic\n" +
-            "attacks burn and slow the target over several seconds.",
-            source = newActor.name
+        Buff redBuff = new(newEntity.entity_id, "red_buff", ctx.Timestamp, 20f, buff_name: "Crest of Cinders",
+            buff_description: "This unit recovers health when not fighting champions or epic monsters. Also, their basic\n" +
+            "attacks burn and slow the target over several seconds.", source: newActor.name);
 
-        });
+
+        AddBuff(ctx, redBuff);
 
     }
 

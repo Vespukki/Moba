@@ -37,16 +37,22 @@ public class BuffManager : MonoBehaviour
     {
         if (actor != target) return;
 
-        var spawned = PrefabManager.SpawnBuffDisplay(buff, buffHolder);
-        buffObjects.Add(buff, spawned);
+        if (BuffInfoLookup.GetInfo(buff.BuffId).visible)
+        {
+            var spawned = PrefabManager.SpawnBuffDisplay(buff, buffHolder);
+            buffObjects.Add(buff, spawned);
+        }
     }
 
     public void RemoveBuff(ActorController actor, Buff buff)
     {
         if (actor != target) return;
 
-        GameObject buffObject = buffObjects[buff];
-        Destroy(buffObject);
-        buffObjects.Remove(buff);
+        if (BuffInfoLookup.GetInfo(buff.BuffId).visible)
+        {
+                GameObject buffObject = buffObjects[buff];
+            Destroy(buffObject);
+            buffObjects.Remove(buff);
+        }
     }
 }

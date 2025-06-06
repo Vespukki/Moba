@@ -57,10 +57,6 @@ public class PlayerController : MonoBehaviour
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(pointerData, results);
 
-        foreach (var result in results)
-        {
-            Debug.Log("UI element hit: " + result.gameObject.name);
-        }
 
         List<RaycastResult> uiHits = new();
 

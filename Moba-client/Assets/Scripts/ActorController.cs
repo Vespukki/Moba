@@ -109,8 +109,6 @@ public class ActorController : EntityController, IHoverable
 
     public void BeginHover()
     {
-        Debug.Log("setting outline");
-
         var mats = smr.materials;
         Material[] updatedMaterials = new Material[mats.Length + 1];
 
@@ -140,8 +138,6 @@ public class ActorController : EntityController, IHoverable
 
     protected override void Update()
     {
-        Debug.Log(buffs.Count);
-
         base.Update();
         HealthBarManager.Instance.SetHealthBarPosition(healthBar, healthBarTarget);
         if (animator != null)
