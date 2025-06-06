@@ -38,14 +38,6 @@ public class BuffDisplay : MonoBehaviour, IHoverable
         }
     }
 
-   /* public void UpdateBuff(Buff buff, Timestamp currentTimestamp)
-    {
-        float timeSinceStart = currentTimestamp.TimeDurationSince(buff.StartTimestamp).Microseconds / 1_000_000f;
-
-        float durationPercent = timeSinceStart / buff.Duration;
-
-        durationIndicator.rotation = Quaternion.Euler(0, 0, (durationPercent / 100f) * 360f);
-    }*/
 
     internal void Initialize(Buff newBuff)
     {
@@ -79,7 +71,6 @@ public class BuffDisplay : MonoBehaviour, IHoverable
         float elapsedTimeSeconds = (float)((double)elapsedTime / (double)1_000_000);
 
         float durationPercent = elapsedTimeSeconds / buff.Duration;
-        Debug.Log($"buff duration percent is {durationPercent}");
 
         durationIndicator.rotation = Quaternion.Euler(0, 0, durationPercent * -360f);
     }
