@@ -19,6 +19,8 @@ public static partial class Module
     [Type]
     public enum AttackState { Ready, Starting, Committed }
 
+    [Type]
+    public enum DamageType { Physical, Magical, True}
 
     [Table(Name = "attacking", Public = true)]
     public partial struct Attacking
@@ -42,6 +44,8 @@ public static partial class Module
         public Timestamp finishedTime;
     }
 
+    [Type]
+    public enum HitType {BasicAttack, Spell}
 
     [Reducer]
     public static void SetAttackTarget(ReducerContext ctx, uint entityId, uint targetEntityId)
@@ -99,8 +103,55 @@ public static partial class Module
             ctx.Db.attacking.Insert(newAttacking);
         }
     }
+    public static void DoOnHit(ReducerContext ctx, Actor actor, Actor targetActor, Buff buff)
+    {
+        switch (buff.buff_id)
+        {
+            case BuffId.RedBuffOnHit:
+
+                Buff newBurn = new Buff(targetActor.entity_id, BuffId.Burning, ctx.Timestamp, 4);
+                Buff tempBurn = new Buff(actor.entity_id, BuffId.Burning, ctx.Timestamp, 4);
+                AddBuff(ctx, newBurn);
+                AddBuff(ctx, tempBurn);
+                break;
+
+            default:
+                break;
+        }
+
+        
+    }
+
+    [Reducer]
+    public static void HitActor(ReducerContext ctx, Actor actor, Actor targetActor, HitType hitType, float damage)
+    {
+        if (hitType == HitType.BasicAttack)
+        {
+            foreach (Buff buff in ctx.Db.buff.entity_id_and_buff_type.Filter((actor.entity_id, "on_hit")))
+            {
+                Log.Info("we have an onhit buff");
+                DoOnHit(ctx, actor, targetActor, buff);
+            }
+        }
 
 
+        Actor newTargetActor = targetActor;
+
+        
+        ctx.Db.registered_hits.Insert(new()
+        {
+            hit_entity_id = targetActor.entity_id,
+            source_entity_id = actor.entity_id
+        });
+
+
+        SetActorHealth(ctx, targetActor, targetActor.max_health, targetActor.current_health - damage);
+        newTargetActor.current_health -= 100;
+
+        ctx.Db.actor.entity_id.Delete(targetActor.entity_id);
+        ctx.Db.actor.Insert(newTargetActor);
+
+    }
 
     [Reducer]
     public static void AttackWithActor(ReducerContext ctx, Attacking attack)
@@ -186,15 +237,9 @@ public static partial class Module
                         if (nullableTargetActor != null)
                         {
                             Actor targetActor = nullableTargetActor.Value;
-                            Actor newTargetActor = targetActor;
-
+                            HitActor(ctx, actor, targetActor, HitType.BasicAttack, CalculateBasicAttackDamage(ctx, actor, targetActor));
                             Log.Info($"just did damage after {GetTimestampDifferenceInSeconds(actor.last_attack_time, ctx.Timestamp)} secs");
                             newActor.last_attack_time = ctx.Timestamp;
-                            ctx.Db.registered_hits.Insert(new()
-                            {
-                                hit_entity_id = targetActor.entity_id,
-                                source_entity_id = entity.entity_id
-                            });
 
                             ctx.Db.attack_cooldown.entity_id.Delete(actor.entity_id);
                             ctx.Db.attack_cooldown.Insert(new()
@@ -203,13 +248,9 @@ public static partial class Module
                                 finishedTime = new Timestamp(attack.attack_start_time.MicrosecondsSinceUnixEpoch + (int)((1f / actor.attack_speed) * 1_000_000))
                             });
                             newAttack.attack_state = AttackState.Ready;
-
-                            newTargetActor.current_health -= 100;
-
-                            ctx.Db.actor.entity_id.Delete(targetActor.entity_id);
-                            ctx.Db.actor.Insert(newTargetActor);
                         }
                     }
+
                     break;
                 case AttackState.Committed:
 
@@ -226,6 +267,11 @@ public static partial class Module
 
             Log.Info($"close enough, attacking because {entity.entity_id} is {DbVector2.Distance(entity.position, targetEntity.position)} away from {targetEntity.entity_id}");
         }
+    }
+
+    public static float CalculateBasicAttackDamage(ReducerContext ctx, Actor actor, Actor targetActor)
+    {
+        return 100f;
     }
 
     [Reducer]

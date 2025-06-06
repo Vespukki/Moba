@@ -7,11 +7,14 @@ public static class BuffInfoLookup
 {
     private static Dictionary<BuffId, BuffDisplayInfo> buffIdToDisplayInfo = new()
     {
-        {
-            BuffId.RedBuff, new(true, false, "Crest of Cinders",
-            "This unit recovers health when not fighting champions or epic monsters. Also, their basic\n" +
-            "attacks burn and slow the target over several seconds."
-            )}
+
+        {BuffId.RedBuff, new(true, false, "Crest of Cinders",
+        "This unit recovers health when not fighting champions or epic monsters. Also, their basic\n" +
+        "attacks burn and slow the target over several seconds.")},
+
+        {BuffId.Burning, new(true, false, "Burning", "This unit is taking damage over time.")}
+
+
     };
 
     public static BuffDisplayInfo GetInfo(BuffId buffId)
