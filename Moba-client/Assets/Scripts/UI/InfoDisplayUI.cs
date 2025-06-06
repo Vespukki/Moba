@@ -1,3 +1,4 @@
+using SpacetimeDB.Types;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,10 +11,18 @@ public class InfoDisplayUI : MonoBehaviour
     public Image firstBar;
     public Image secondBar;
 
-    public void Initialize(string title, string body, string source)
+    public Image spriteImage;
+    public void Initialize(Buff buff, BuffDisplayInfo info)
     {
-        titleText.SetText(title);
-        bodyText.SetText(body);
-        sourceText.SetText(source);
+        titleText.SetText(info.buffName);
+        bodyText.SetText(info.buffDescription);
+
+        if (buff.Source == "")
+        {
+            secondBar.enabled = false;
+        }
+        sourceText.SetText(buff.Source);
+
+        BuffDisplay.LoadBuffSpriteAsync(buff, (Sprite sprite) => spriteImage.sprite = sprite);
     }
 }

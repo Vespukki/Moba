@@ -113,6 +113,11 @@ public static partial class Module
                 Buff tempBurn = new Buff(actor.entity_id, BuffId.Burning, ctx.Timestamp, 4);
                 AddBuff(ctx, newBurn);
                 AddBuff(ctx, tempBurn);
+
+                Buff newSlow = new Buff(targetActor.entity_id, BuffId.Slowed, ctx.Timestamp, 4);
+                Buff tempSlow = new Buff(actor.entity_id, BuffId.Slowed, ctx.Timestamp, 4);
+                AddBuff(ctx, newSlow);
+                AddBuff(ctx, tempSlow);
                 break;
 
             default:
@@ -127,10 +132,13 @@ public static partial class Module
     {
         if (hitType == HitType.BasicAttack)
         {
-            foreach (Buff buff in ctx.Db.buff.entity_id_and_buff_type.Filter((actor.entity_id, "on_hit")))
+            foreach (Buff buff in ctx.Db.buff.entity_id.Filter(actor.entity_id))
             {
-                Log.Info("we have an onhit buff");
-                DoOnHit(ctx, actor, targetActor, buff);
+                if (ctx.Db.buff_on_hit.buff_id.Find((uint)buff.buff_id) != null)
+                {
+                    Log.Info("we have an onhit buff");
+                    DoOnHit(ctx, actor, targetActor, buff);
+                }
             }
         }
 

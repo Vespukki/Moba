@@ -37,7 +37,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 15, y: -114.965004}
+  m_AnchoredPosition: {x: 15, y: -168.965}
   m_SizeDelta: {x: 220.71, y: 0}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &4969832611439812221
@@ -68,7 +68,19 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: This is my epic sauce face.
+  m_text: 'This is my epic sauce face.
+
+    This is my epic sauce face.
+
+    This
+    is my epic sauce face.
+
+    This is my epic sauce face.
+
+    This is my epic
+    sauce face.
+
+    This is my epic sauce face.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 33bcff954d6a91443bcf3397f6b41ae0, type: 2}
   m_sharedMaterial: {fileID: -2590825348202245377, guid: 33bcff954d6a91443bcf3397f6b41ae0, type: 2}
@@ -156,6 +168,7 @@ MonoBehaviour:
   sourceText: {fileID: 0}
   firstBar: {fileID: 0}
   secondBar: {fileID: 0}
+  spriteImage: {fileID: 0}
 --- !u!114 &8506118771578591044
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,7 +369,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 15, y: -155.93501}
+  m_AnchoredPosition: {x: 15, y: -259.785}
   m_SizeDelta: {x: 203.75, y: 0}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &7320771975755832249
@@ -452,7 +465,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 15, y: 15, z: 15, w: 15}
+  m_margin: {x: 15, y: 15, z: 15, w: 6.76}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -475,6 +488,7 @@ MonoBehaviour:
   sourceText: {fileID: 0}
   firstBar: {fileID: 0}
   secondBar: {fileID: 0}
+  spriteImage: {fileID: 0}
 --- !u!114 &715694110974574322
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -550,7 +564,7 @@ MonoBehaviour:
     m_Left: 15
     m_Right: 15
     m_Top: -2
-    m_Bottom: -8
+    m_Bottom: 4
   m_ChildAlignment: 0
   m_Spacing: -5.02
   m_ChildForceExpandWidth: 0
@@ -629,6 +643,7 @@ MonoBehaviour:
   sourceText: {fileID: 2663731636242077329}
   firstBar: {fileID: 6065817891428011729}
   secondBar: {fileID: 2170302673927504007}
+  spriteImage: {fileID: 7047958092186214651}
 --- !u!1 &5923118258335881948
 GameObject:
   m_ObjectHideFlags: 0
@@ -903,3 +918,4 @@ MonoBehaviour:
   sourceText: {fileID: 0}
   firstBar: {fileID: 0}
   secondBar: {fileID: 0}
+  spriteImage: {fileID: 0}

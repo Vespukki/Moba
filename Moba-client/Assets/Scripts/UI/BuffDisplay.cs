@@ -26,7 +26,7 @@ public class BuffDisplay : MonoBehaviour, IHoverable
         if (infoDisplayInstance == null)
         {
             infoDisplayInstance = Instantiate(infoDisplayPrefab, PlayerController.Local.mouseTransform).GetComponent<InfoDisplayUI>();
-            infoDisplayInstance.Initialize(buffInfo.buffName, buffInfo.buffDescription, buff.Source);
+            infoDisplayInstance.Initialize(buff, buffInfo);
         }
     }
 
@@ -55,14 +55,7 @@ public class BuffDisplay : MonoBehaviour, IHoverable
             stackText.text = newBuff.Stacks.ToString();
         }
 
-        if (SpriteManager.spriteLookup.TryGetValue(newBuff.BuffId, out Sprite sprite))
-        {
-            buffImage.sprite = sprite;
-        }
-        else
-        {
-            LoadBuffSpriteAsync(newBuff);
-        }
+        LoadBuffSpriteAsync(newBuff, (Sprite sprite) => buffImage.sprite = sprite);
 
     }
 
@@ -90,19 +83,27 @@ public class BuffDisplay : MonoBehaviour, IHoverable
         }
     }
 
-    private async void LoadBuffSpriteAsync(Buff buff)
+    public static async void LoadBuffSpriteAsync(Buff buff, Action<Sprite> onLoaded)
     {
+        if (SpriteManager.spriteLookup.TryGetValue(buff.BuffId, out Sprite sprite))
+        {
+            onLoaded?.Invoke(sprite);
+            return;
+        }
+
+
         AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(buff.BuffId.ToString());
         await handle.Task;
 
         if (handle.Status == AsyncOperationStatus.Succeeded)
         {
             SpriteManager.spriteLookup[buff.BuffId] = handle.Result;
-            buffImage.sprite = handle.Result;
+            onLoaded?.Invoke(handle.Result);
         }
         else
         {
             Debug.LogWarning($"Failed to load sprite with id: {buff.BuffId}");
+            onLoaded?.Invoke(null); // optionally invoke with null to indicate failure
         }
     }
 }

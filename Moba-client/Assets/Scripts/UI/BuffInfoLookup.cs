@@ -12,7 +12,8 @@ public static class BuffInfoLookup
         "This unit recovers health when not fighting champions or epic monsters. Also, their basic\n" +
         "attacks burn and slow the target over several seconds.")},
 
-        {BuffId.Burning, new(true, false, "Burning", "This unit is taking damage over time.")}
+        {BuffId.Burning, new(true, false, "Burning", "This unit is taking damage over time.")},
+        {BuffId.Slowed, new(true, false, "Slowed", "This unit's Move Speed is slowed.")}
 
 
     };

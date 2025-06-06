@@ -123,6 +123,10 @@ public static partial class Module
             
         });
 
+        //init buff relations
+        ctx.Db.buff_health_regen.Insert(new(BuffId.RedBuffRegen));
+        ctx.Db.buff_on_hit.Insert(new(BuffId.RedBuffOnHit));
+
         var tickTimer = new TickTimer
         {
             scheduled_at = new ScheduleAt.Interval(new TimeDuration(33_000))

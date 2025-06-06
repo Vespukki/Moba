@@ -21,12 +21,12 @@ public static partial class Module
     [Reducer]
     public static void CreateRedBuffComponents(ReducerContext ctx, Buff redBuff)
     {
-        Buff healingComponent = new(redBuff.entity_id, BuffId.RedBuffRegen, redBuff.start_timestamp, redBuff.duration, buff_type: "health_regen");
+        Buff healingComponent = new(redBuff.entity_id, BuffId.RedBuffRegen, redBuff.start_timestamp, redBuff.duration);
         Buff newHealingBuff = ctx.Db.buff.Insert(healingComponent);
         UpdateBuffValue(ctx, newHealingBuff);
 
 
-        Buff burnOnHit = new(redBuff.entity_id, BuffId.RedBuffOnHit, redBuff.start_timestamp, redBuff.duration, buff_type: "on_hit");
+        Buff burnOnHit = new(redBuff.entity_id, BuffId.RedBuffOnHit, redBuff.start_timestamp, redBuff.duration);
         Buff newBurnOnHit = ctx.Db.buff.Insert(burnOnHit);
         UpdateBuffValue(ctx, newBurnOnHit);
     }

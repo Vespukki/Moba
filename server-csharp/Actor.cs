@@ -35,9 +35,12 @@ public static partial class Module
     public static void DoHealthRegen(ReducerContext ctx, Actor actor)
     {
         float totalHealthRegen = actor.health_regen;
-        foreach (Buff buff in ctx.Db.buff.entity_id_and_buff_type.Filter((actor.entity_id, "health_regen")))
+        foreach (Buff buff in ctx.Db.buff.entity_id.Filter((actor.entity_id)))
         {
-            totalHealthRegen += buff.value;
+            if (ctx.Db.buff_health_regen.buff_id.Find((uint)buff.buff_id) != null)
+            {
+                totalHealthRegen += buff.value;
+            }
         }
 
         float healthToAdd = (totalHealthRegen / 5f) * (deltaTime.Microseconds / 1_000_000f);

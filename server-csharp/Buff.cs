@@ -4,12 +4,13 @@ using System.Diagnostics;
 public static partial class Module
 {
     [Type]
-    public enum BuffId {RedBuff, RedBuffRegen, RedBuffOnHit, Burning};
+    public enum BuffId {RedBuff, RedBuffRegen, RedBuffOnHit, Burning, Slowed };
+    public enum BuffType { HealthRegen, OnHit}
+
 
     [Table(Name = "buff", Public = true)]
-    [SpacetimeDB.Index.BTree(Name = "entity_id_and_buff_type", Columns = new[] { nameof(entity_id), nameof(buff_type) })]
     public partial struct Buff(uint entity_id, BuffId buff_id, Timestamp start_timestamp, float duration, 
-        string buff_type = "", float value = 0, int stacks = 0, string source = "", uint buff_instance_id = 0)
+        float value = 0, int stacks = 0, string source = "", uint buff_instance_id = 0)
     {
 
         [SpacetimeDB.Index.BTree]
@@ -19,8 +20,6 @@ public static partial class Module
         public Timestamp start_timestamp = start_timestamp;
         public float duration = duration;
 
-
-        public string buff_type = buff_type;
         
         public float value = value;
         public int stacks = stacks;
@@ -31,13 +30,21 @@ public static partial class Module
         public uint buff_instance_id = buff_instance_id;
     }
 
-    /*[Table(Name = "buff_on_hit", Public = true)]
-    public partial struct BuffOnHit
-    {
-        [SpacetimeDB.Index.BTree]
-        BuffId buff_id;
 
-    }*/
+    [Table(Name = "buff_on_hit", Public = true)]
+    public partial struct BuffOnHit(BuffId buff_id)
+    {
+        [PrimaryKey]
+        uint buff_id = (uint)buff_id;
+
+    }
+
+    [Table(Name = "buff_health_regen", Public = true)]
+    public partial struct BuffHealthRegen(BuffId buff_id)
+    {
+        [PrimaryKey, Unique]
+        uint buff_id = (uint)buff_id;
+    }
 
     [Reducer]
     public static void DoBuff(ReducerContext ctx, Buff buff)
