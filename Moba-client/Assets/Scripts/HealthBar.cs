@@ -105,9 +105,9 @@ public class HealthBar : MonoBehaviour
         greenPart.transform.localScale = new Vector3(ratio, greenPart.transform.localScale.y, greenPart.transform.localScale.z);
     }
 
-    public void UpdateHealth(Actor actor)
+    public void UpdateHealth(Actor actor, ActorBaseStats stats)
     {
-        int maxHealth = (int)actor.MaxHealth;
+        int maxHealth = (int)stats.MaxHealth;
         int currentHealth = (int)actor.CurrentHealth;
 
         if (maxHealth != lastMaxHealth)

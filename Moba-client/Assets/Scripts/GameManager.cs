@@ -243,8 +243,9 @@ public class GameManager : MonoBehaviour
     {
         Entity entity = ctx.Db.Entity.EntityId.Find(champ.EntityId);
         Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
+        ActorBaseStats baseStats = ctx.Db.ActorBaseStats.ActorId.Find(actor.ActorId);
 
-        var spawned = PrefabManager.SpawnChampion(entity, actor, champ);
+        var spawned = PrefabManager.SpawnChampion(entity, actor, champ, baseStats);
         championInstances.Add(champ.EntityId, spawned);
 
 
@@ -255,29 +256,32 @@ public class GameManager : MonoBehaviour
         }
 
         List<Buff> buffsToMoveOver = new();
-        foreach (var buff in buffsByEntityId[0]) //the unassigned ones
+        if (buffsByEntityId.TryGetValue(0, out List<Buff> buffList))
         {
-            if (buff.EntityId == champ.EntityId)
+            foreach (var buff in buffList) //the unassigned ones
             {
-                buffsToMoveOver.Add(buff);
+                if (buff.EntityId == champ.EntityId)
+                {
+                    buffsToMoveOver.Add(buff);
+                }
             }
-        }
 
-        foreach (var buff in buffsToMoveOver)
-        {
-            
-            buffsByEntityId.Remove(buff.BuffInstanceId);
-            ChampionController champController = championInstances[champ.EntityId];
-            champController.AddBuff(buff);
-            if (buffsByEntityId.TryGetValue(champ.EntityId, out List<Buff> buffs))
+            foreach (var buff in buffsToMoveOver)
             {
-                buffs.Add(buff);
-            }
-            else
-            {
-                var newList = new List<Buff>() { buff };
-                buffsByEntityId.Add(champ.EntityId, newList);
 
+                buffsByEntityId.Remove(buff.BuffInstanceId);
+                ChampionController champController = championInstances[champ.EntityId];
+                champController.AddBuff(buff);
+                if (buffsByEntityId.TryGetValue(champ.EntityId, out List<Buff> buffs))
+                {
+                    buffs.Add(buff);
+                }
+                else
+                {
+                    var newList = new List<Buff>() { buff };
+                    buffsByEntityId.Add(champ.EntityId, newList);
+
+                }
             }
         }
     }

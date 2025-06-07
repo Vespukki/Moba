@@ -123,6 +123,35 @@ public static partial class Module
             
         });
 
+        ctx.Db.actor_base_stats.Insert(new ActorBaseStats()
+        {
+            actor_id = (uint)ActorId.Fiora,
+            max_health = 2000f,
+            attack_range = 150f,
+            attack_speed = .69f,
+            windup_percent = .13793f,
+            health_regen = 0f,
+            armor = 33f,
+            attack = 66f,
+            magic_resist = 32,
+            move_speed = 345
+        });
+
+        ctx.Db.actor_base_stats.Insert(new ActorBaseStats()
+        {
+            actor_id = (uint)ActorId.Dummy,
+            max_health = 3000f,
+            attack_range = 0f,
+            attack_speed = 0f,
+            windup_percent = 1f,
+            health_regen = 30f,
+            armor = 0f,
+            attack = 0f,
+            magic_resist = 0f,
+            move_speed = 0f
+        });
+
+
         //init buff relations
         ctx.Db.buff_health_regen.Insert(new(BuffId.RedBuffRegen));
         ctx.Db.buff_on_hit.Insert(new(BuffId.RedBuffOnHit));

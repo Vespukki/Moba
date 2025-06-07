@@ -87,13 +87,15 @@ public static partial class Module
     public static void DoBurn(ReducerContext ctx, Buff buff)
     {
         var nullableActor = ctx.Db.actor.entity_id.Find(buff.entity_id);
-
         if (nullableActor == null) return;
-
         Actor actor = nullableActor.Value;
 
+        var nStats = ctx.Db.actor_base_stats.actor_id.Find(actor.actor_id);
+        if (nStats == null) return;
+        ActorBaseStats stats = nStats.Value;
+
         Log.Info("BURNING");
-        SetActorHealth(ctx, actor, actor.max_health, actor.current_health - 200f * ((float)deltaTime.Microseconds / 1_000_000f));
+        SetActorHealth(ctx, actor, stats, actor.current_health - 200f * ((float)deltaTime.Microseconds / 1_000_000f));
     }
 
     [Reducer]

@@ -2,7 +2,8 @@
 
 public static partial class Module
 {
-    
+    [Type]
+    public enum ActorId { Fiora, Dummy }
 
     [Table(Name = "actor", Public = true)]
     public partial struct Actor
@@ -10,25 +11,28 @@ public static partial class Module
         [PrimaryKey, Unique]
         public uint entity_id;
         public string name;
-
-        public float rotation;
-        public float current_health;
-        public float max_health;
         public Team team;
-        public uint attack_range;
-        public float attack_speed;
-        public float windup_percent; //percentage
         public Timestamp last_attack_time;
-        public float health_regen; //per 5 seconds
-    }
+        public float rotation;
+        public uint actor_id;
 
-    [Type]
-    public enum ActorId { Fiora, Dummy}
+        public float current_health;
+        /*public float bonus_health;
+
+        public float bonus_attack_damage;
+        public float bonus_armor;
+        public float bonus_magic_resist;
+        public float bonus_attack_speed_percentage;
+        public float bonus_move_speed;
+        public float bonus_health_regen_percentage;*/
+    }
 
     [Table(Name = "actor_base_stats", Public = true)]
     public partial struct ActorBaseStats()
     {
+        [PrimaryKey]
         public uint actor_id;
+
         public float max_health;
         public float attack;
         public float armor;
@@ -50,10 +54,22 @@ public static partial class Module
         }
     }
 
+    public static float GetHealthRegen(Actor actor, ActorBaseStats baseStats)
+    {
+        return baseStats.health_regen;
+    }
+
+    public static float GetMaxHealth(Actor actor, ActorBaseStats baseStats)
+    {
+        return baseStats.max_health;
+    }
+
     [Reducer]
     public static void DoHealthRegen(ReducerContext ctx, Actor actor)
     {
-        float totalHealthRegen = actor.health_regen;
+        var nBaseStats = ctx.Db.actor_base_stats.actor_id.Find((uint)actor.actor_id);
+        if (nBaseStats == null) return;
+        float totalHealthRegen = nBaseStats.Value.health_regen;
         foreach (Buff buff in ctx.Db.buff.entity_id.Filter((actor.entity_id)))
         {
             if (ctx.Db.buff_health_regen.buff_id.Find((uint)buff.buff_id) != null)
@@ -66,27 +82,31 @@ public static partial class Module
 
         if (healthToAdd != 0)
         {
-            SetActorHealth(ctx, actor, actor.max_health, actor.current_health + healthToAdd);
+            SetActorHealth(ctx, actor, nBaseStats.Value, actor.current_health + healthToAdd);
         }
     }
 
     [Reducer]
-    public static void SetActorHealth(ReducerContext ctx, Actor actor, float newMaxHealth, float newCurrentHealth)
+    public static void SetActorHealth(ReducerContext ctx, Actor actor, ActorBaseStats baseStats, float newCurrentHealth)
     {
-        Log.Info("Changing health");
 
-        if (newMaxHealth < 0) newMaxHealth = 0;
+        float maxHealth = GetMaxHealth(actor, baseStats);
 
         if (newCurrentHealth < 0) newCurrentHealth = 0;
 
-        else if (newCurrentHealth > newMaxHealth) newCurrentHealth = newMaxHealth;
+        else if (newCurrentHealth > maxHealth) newCurrentHealth = maxHealth;
 
         Actor newActor = actor;
 
         newActor.current_health = newCurrentHealth;
-        newActor.max_health = newMaxHealth;
+
+        Log.Info($"health difference: {actor.current_health - newActor.current_health}");
+        Log.Info($"newActors health: {newActor.current_health}");
 
         ctx.Db.actor.entity_id.Delete(actor.entity_id);
-        ctx.Db.actor.Insert(newActor);
+        var insertedActor = ctx.Db.actor.Insert(newActor);
+
+        Log.Info($"newActors health after insert: {insertedActor.current_health}");
+
     }
 }

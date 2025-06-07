@@ -36,9 +36,9 @@ public class ChampionController : ActorController
         Destroy(vfx);
     }
 
-    public void Initialize(Entity entity, Actor actor, ChampionInstance champ)
+    public void Initialize(Entity entity, Actor actor, ChampionInstance champ, ActorBaseStats baseStats)
     {
-        Initialize(entity, actor);
+        Initialize(entity, actor, baseStats);
         ownerPlayerId = champ.PlayerId;
     }
 

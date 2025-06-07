@@ -44,7 +44,11 @@ public static partial class Module
             if (nullableActor == null) return;
             Actor actor = nullableActor.Value;
 
-            float windupTime = (1f / actor.attack_speed) * actor.windup_percent;
+            var nStats = ctx.Db.actor_base_stats.actor_id.Find(actor.actor_id);
+            if (nStats == null) return;
+            ActorBaseStats stats = nStats.Value;
+
+            float windupTime = (1f / stats.attack_speed) * stats.windup_percent;
             float timeUntilHit = windupTime - timeSinceAttackStarted;
 
             if (Math.Abs(timeUntilHit) < .4f * windupTime)

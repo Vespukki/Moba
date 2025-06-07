@@ -68,15 +68,11 @@ public static partial class Module
         {
             entity_id = newEntity.entity_id,
             name = "Fiora",
-            max_health = 2000f,
             current_health = 1000f,
             rotation = 0,
             team = teamToBe,
-            attack_range = champStats.attack_range,
-            attack_speed = .69f,
-            windup_percent = .13793f,
             last_attack_time = ctx.Timestamp,
-            health_regen = 0f
+            actor_id = (uint)ActorId.Fiora
         });
 
         ChampionInstance newChamp = new()
@@ -90,10 +86,8 @@ public static partial class Module
        
         ctx.Db.champion_instance.Insert(newChamp);
 
-        Buff redBuff = new(newEntity.entity_id, BuffId.RedBuff, ctx.Timestamp, 20f, source: newActor.name);
-
-
-        AddBuff(ctx, redBuff);
+        /*Buff redBuff = new(newEntity.entity_id, BuffId.RedBuff, ctx.Timestamp, 20f, source: newActor.name);
+        AddBuff(ctx, redBuff);*/
 
     }
 

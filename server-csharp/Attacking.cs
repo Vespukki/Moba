@@ -128,7 +128,7 @@ public static partial class Module
     }
 
     [Reducer]
-    public static void HitActor(ReducerContext ctx, Actor actor, Actor targetActor, HitType hitType, float damage)
+    public static void HitActor(ReducerContext ctx, Actor actor, Actor targetActor, ActorBaseStats actorBaseStats, ActorBaseStats targetBaseStats, HitType hitType, float damage)
     {
         if (hitType == HitType.BasicAttack)
         {
@@ -152,13 +152,9 @@ public static partial class Module
             source_entity_id = actor.entity_id
         });
 
-
-        SetActorHealth(ctx, targetActor, targetActor.max_health, targetActor.current_health - damage);
-        newTargetActor.current_health -= 100;
-
-        ctx.Db.actor.entity_id.Delete(targetActor.entity_id);
-        ctx.Db.actor.Insert(newTargetActor);
-
+        Log.Info($"fixin to do {damage} damage to {targetActor.entity_id}");
+        float newCurrentHealth = targetActor.current_health - damage;
+        SetActorHealth(ctx, targetActor, targetBaseStats, newCurrentHealth);
     }
 
     [Reducer]
@@ -192,9 +188,15 @@ public static partial class Module
         Entity targetEntity = nullableTargetEntity.Value;
 
         var nullableAttackCooldown = ctx.Db.attack_cooldown.entity_id.Find(actor.entity_id);
+
+        var nBaseStats = ctx.Db.actor_base_stats.actor_id.Find(actor.actor_id);
+        if (nBaseStats == null) return;
+        ActorBaseStats actorBaseStats = nBaseStats.Value;
+
+
         #endregion
 
-        if (DbVector2.Distance(entity.position, targetEntity.position) > actor.attack_range)
+        if (DbVector2.Distance(entity.position, targetEntity.position) > actorBaseStats.attack_range)
         {
             ctx.Db.walking.entity_id.Delete(attack.entity_id);
             ctx.Db.walking.Insert(new()
@@ -239,13 +241,20 @@ public static partial class Module
 
                     Log.Info("Starting");
 
-                    if (GetTimestampDifferenceInSeconds(newAttack.attack_start_time, ctx.Timestamp) >= 1f / actor.attack_speed * actor.windup_percent)
+                    if (GetTimestampDifferenceInSeconds(newAttack.attack_start_time, ctx.Timestamp) >= 1f / actorBaseStats.attack_speed * actorBaseStats.windup_percent)
                     {
                         var nullableTargetActor = ctx.Db.actor.entity_id.Find(attack.target_entity_id);
                         if (nullableTargetActor != null)
                         {
                             Actor targetActor = nullableTargetActor.Value;
-                            HitActor(ctx, actor, targetActor, HitType.BasicAttack, CalculateBasicAttackDamage(ctx, actor, targetActor));
+
+                            var nTargetBaseStats = ctx.Db.actor_base_stats.actor_id.Find(targetActor.actor_id);
+                            if (nTargetBaseStats == null) return;
+                            ActorBaseStats targetBaseStats = nTargetBaseStats.Value;
+
+                            HitActor(ctx, actor, targetActor, actorBaseStats, targetBaseStats, HitType.BasicAttack, 
+                                CalculateBasicAttackDamage(ctx, actor, targetActor, actorBaseStats, targetBaseStats));
+
                             Log.Info($"just did damage after {GetTimestampDifferenceInSeconds(actor.last_attack_time, ctx.Timestamp)} secs");
                             newActor.last_attack_time = ctx.Timestamp;
 
@@ -253,14 +262,11 @@ public static partial class Module
                             ctx.Db.attack_cooldown.Insert(new()
                             {
                                 entity_id = actor.entity_id,
-                                finishedTime = new Timestamp(attack.attack_start_time.MicrosecondsSinceUnixEpoch + (int)((1f / actor.attack_speed) * 1_000_000))
+                                finishedTime = new Timestamp(attack.attack_start_time.MicrosecondsSinceUnixEpoch + (int)((1f / actorBaseStats.attack_speed) * 1_000_000))
                             });
                             newAttack.attack_state = AttackState.Ready;
                         }
                     }
-
-                    break;
-                case AttackState.Committed:
 
                     break;
                 default:
@@ -277,7 +283,7 @@ public static partial class Module
         }
     }
 
-    public static float CalculateBasicAttackDamage(ReducerContext ctx, Actor actor, Actor targetActor)
+    public static float CalculateBasicAttackDamage(ReducerContext ctx, Actor actor, Actor targetActor, ActorBaseStats actorBaseStats, ActorBaseStats targetBaseStats)
     {
         return 100f;
     }

@@ -13,8 +13,12 @@ public static partial class Module
         }
         Actor actor = nullableActor.Value;
 
+        var nStats = ctx.Db.actor_base_stats.actor_id.Find(actor.actor_id);
+        if (nStats == null) return 0;
+        ActorBaseStats stats = nStats.Value;
+
         return 400; //TEMP
-        return actor.max_health * .03f;
+        return stats.max_health * .03f;
 
     }
 

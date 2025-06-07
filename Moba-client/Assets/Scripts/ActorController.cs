@@ -30,6 +30,8 @@ public class ActorController : EntityController, IHoverable
     public static event BuffChangeDelegate OnBuffAdded;
     public static event BuffChangeDelegate OnBuffRemoved;
 
+    public Actor actor;
+    public ActorBaseStats baseStats;
     public List<Buff> GetBuffs()
     {
         return buffs;
@@ -67,19 +69,17 @@ public class ActorController : EntityController, IHoverable
     public void InsertActor(Actor newActor)
     {
         rotationLerpTarget = newActor.Rotation;
+        actor = newActor;
 
-        healthBar.UpdateHealth(newActor);
+        healthBar.UpdateHealth(actor, baseStats);
     }
 
     public void UpdateActor(Actor oldActor, Actor newActor)
     {
         rotationLerpTarget = newActor.Rotation;
+        actor = newActor;
 
-        healthBar.UpdateHealth(newActor);
-        /*if (newActor.CurrentHealth != oldActor.CurrentHealth)
-        {
-            FlashRed(500);
-        }*/
+        healthBar.UpdateHealth(newActor, baseStats);
     }
 
     public async void FlashRed(int msDelay)
@@ -94,16 +94,19 @@ public class ActorController : EntityController, IHoverable
         smr.material.color = originalColor;
     }
 
-    public void Initialize(Entity entity, Actor actor)
+    public void Initialize(Entity entity, Actor actor, ActorBaseStats baseStats)
     {
         Debug.Log($"initializing {gameObject.name}'s entity");
         Initialize(entity);
+        this.baseStats = baseStats;
+        this.actor = actor;
         team = actor.Team;
         transform.position = (Vector2)entity.Position;
         rotationLerpTarget = actor.Rotation;
         healthBar = HealthBarManager.Instance.InitializeHealthBar(healthBarPrefab);
         HealthBarManager.Instance.SetHealthBarPosition(healthBar, healthBarTarget);
-        healthBar.UpdateHealth(actor);
+
+        healthBar.UpdateHealth(actor, baseStats);
     }
 
 

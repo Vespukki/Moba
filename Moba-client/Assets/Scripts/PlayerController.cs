@@ -20,9 +20,9 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] SelectionMenu selectionMenu;
 
-    private Actor _currentSelected;
+    private ActorController _currentSelected;
 
-    public Actor CurrentSelected
+    public ActorController CurrentSelected
     {
         get
         {

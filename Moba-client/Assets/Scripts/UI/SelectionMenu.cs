@@ -17,8 +17,8 @@ public class SelectionMenu : MonoBehaviour
     public TextMeshProUGUI critChanceText;
     public TextMeshProUGUI moveSpeedText;
 
-    public void Initialize(Actor value)
+    public void Initialize(ActorController actorController)
     {
-        throw new NotImplementedException();
+
     }
 }
