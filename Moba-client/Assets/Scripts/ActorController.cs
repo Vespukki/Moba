@@ -1,4 +1,5 @@
 using SpacetimeDB.Types;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -7,7 +8,8 @@ public class ActorController : EntityController, IHoverable
 {
     protected float rotationLerpTarget;
     
-    public Material outlineMat;
+    public Material highlightMat;
+    public Material selectMat;
 
     public Team team;
 
@@ -32,6 +34,7 @@ public class ActorController : EntityController, IHoverable
 
     public Actor actor;
     public ActorBaseStats baseStats;
+    
     public List<Buff> GetBuffs()
     {
         return buffs;
@@ -82,18 +85,7 @@ public class ActorController : EntityController, IHoverable
         healthBar.UpdateHealth(newActor, baseStats);
     }
 
-    public async void FlashRed(int msDelay)
-    {
-        SkinnedMeshRenderer smr = GetComponentInChildren<SkinnedMeshRenderer>();
-
-
-        smr.material.color = Color.red;
-
-        await Task.Delay(msDelay);
-
-        smr.material.color = originalColor;
-    }
-
+    
     public void Initialize(Entity entity, Actor actor, ActorBaseStats baseStats)
     {
         Debug.Log($"initializing {gameObject.name}'s entity");
@@ -109,35 +101,44 @@ public class ActorController : EntityController, IHoverable
         healthBar.UpdateHealth(actor, baseStats);
     }
 
+    public void BeginSelect()
+    {
+        var mats = new List<Material>(smr.sharedMaterials);
+        if (!mats.Contains(selectMat))
+        {
+            mats.Add(selectMat);
+            smr.sharedMaterials = mats.ToArray();
+        }
+    }
+
+    public void EndSelect()
+    {
+        var mats = new List<Material>(smr.sharedMaterials);
+        if (mats.Remove(selectMat)) // removes only the selectMat if it exists
+        {
+            smr.sharedMaterials = mats.ToArray();
+        }
+    }
 
     public void BeginHover()
     {
-        var mats = smr.materials;
-        Material[] updatedMaterials = new Material[mats.Length + 1];
-
-        for (int i = 0; i < mats.Length; i++)
+        var mats = new List<Material>(smr.sharedMaterials);
+        if (!mats.Contains(highlightMat))
         {
-            updatedMaterials[i] = mats[i];
+            mats.Add(highlightMat);
+            smr.sharedMaterials = mats.ToArray();
         }
-
-        updatedMaterials[mats.Length] = outlineMat;
-
-        smr.materials = updatedMaterials;
-
     }
 
     public void EndHover()
     {
-        var mats = smr.materials;
-        Material[] updatedMaterials = new Material[mats.Length - 1];
-
-        for (int i = 0; i < mats.Length - 1; i++)
+        var mats = new List<Material>(smr.sharedMaterials);
+        if (mats.Remove(highlightMat)) // removes only the highlightMat if it exists
         {
-            updatedMaterials[i] = mats[i];
+            smr.sharedMaterials = mats.ToArray();
         }
-
-        smr.materials = updatedMaterials;
     }
+
 
     protected override void Update()
     {
@@ -157,4 +158,43 @@ public class ActorController : EntityController, IHoverable
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, finalRotation, transform.rotation.eulerAngles.z);
     }
 
+    internal float GetAttackDamage()
+    {
+        return baseStats.Attack;
+    }
+
+    internal float GetAbilityPower()
+    {
+        return 0;
+    }
+
+    internal float GetArmor()
+    {
+        return baseStats.Armor;
+    }
+
+    internal float GetMagicResist()
+    {
+        return baseStats.MagicResist;
+    }
+
+    internal float GetAttackSpeed()
+    {
+        return baseStats.AttackSpeed;
+    }
+
+    internal float GetAbilityHaste()
+    {
+        return 0;
+    }
+
+    internal float GetCritChance()
+    {
+        return 0;
+    }
+
+    internal float GetMoveSpeed()
+    {
+        return baseStats.MoveSpeed;
+    }
 }

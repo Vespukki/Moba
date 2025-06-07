@@ -2674,7 +2674,8 @@ MonoBehaviour:
   hitVfx:
     hitVfxPrefab: {fileID: 2343060853285553667, guid: 3ff4d70e2f466a14789b1171b05b4920, type: 3}
     timer: 1
-  outlineMat: {fileID: 2100000, guid: 1e2817911072f304fa5f85be62dfd076, type: 2}
+  highlightMat: {fileID: 2100000, guid: 1e2817911072f304fa5f85be62dfd076, type: 2}
+  selectMat: {fileID: 2100000, guid: bf36fbc27dda744438d3694f218083f2, type: 2}
   team: 0
   healthBarPrefab: {fileID: 2242735179602747154, guid: 8a9ebd27f2f455d48bef80dfad827d28, type: 3}
   healthBarTarget: {fileID: 413410621689141766}

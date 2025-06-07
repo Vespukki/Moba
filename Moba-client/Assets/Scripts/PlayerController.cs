@@ -18,8 +18,6 @@ public class PlayerController : MonoBehaviour
 
     private IHoverable _currentHover;
 
-    [SerializeField] SelectionMenu selectionMenu;
-
     private ActorController _currentSelected;
 
     public ActorController CurrentSelected
@@ -30,8 +28,21 @@ public class PlayerController : MonoBehaviour
         }
         set
         {
+            if (_currentSelected != null)
+            {
+                _currentSelected.EndSelect();
+            }
             _currentSelected = value;
-            selectionMenu.Initialize(value);
+            if (value == null)
+            {
+                SelectionMenu.instance.gameObject.SetActive(false);
+            }
+            else
+            {
+                SelectionMenu.instance.gameObject.SetActive(true);
+                SelectionMenu.instance.Initialize(value);
+                value.BeginSelect();
+            }
         }
     }
 
@@ -45,6 +56,7 @@ public class PlayerController : MonoBehaviour
         set
         {
             if (_currentHover == value) return;
+
             _currentHover?.EndHover();
             _currentHover = value;
             if (value != null)
@@ -150,7 +162,29 @@ public class PlayerController : MonoBehaviour
 
             CurrentHover = newCurrentHighlight;
             
+            if (Input.GetMouseButtonDown(0))
+            {
+                switch (hit.collider.tag)
+                {
+                    case "Actor":
+                        if (!isPlayerChamp)
+                        {
+                            CurrentSelected = actor;
 
+                            consumedRay = true;
+                        }
+                        break;
+
+                    case "Ground":
+                        CurrentSelected = actor;
+                        consumedRay = true;
+                        break;
+                    case "UI":
+                        break;
+                    default:
+                        break;
+                }
+            }
             if (Input.GetMouseButtonDown(1))
             {
                 switch (hit.collider.tag)
