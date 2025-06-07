@@ -22,6 +22,25 @@ public static partial class Module
         public float health_regen; //per 5 seconds
     }
 
+    [Type]
+    public enum ActorId { Fiora, Dummy}
+
+    [Table(Name = "actor_base_stats", Public = true)]
+    public partial struct ActorBaseStats()
+    {
+        public uint actor_id;
+        public float max_health;
+        public float attack;
+        public float armor;
+        public float magic_resist;
+        public float attack_speed;
+        public float windup_percent;
+        public float move_speed;
+        public float health_regen;
+        public float attack_range;
+
+    }
+
     [Reducer]
     public static void DoAllActorUpkeep(ReducerContext ctx)
     {

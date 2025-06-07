@@ -18,6 +18,23 @@ public class PlayerController : MonoBehaviour
 
     private IHoverable _currentHover;
 
+    [SerializeField] SelectionMenu selectionMenu;
+
+    private Actor _currentSelected;
+
+    public Actor CurrentSelected
+    {
+        get
+        {
+            return _currentSelected;
+        }
+        set
+        {
+            _currentSelected = value;
+            selectionMenu.Initialize(value);
+        }
+    }
+
     public List<uint> ownedEntities;
     public IHoverable CurrentHover
     {

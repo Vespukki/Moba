@@ -34,7 +34,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -176,16 +176,16 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: leagueHUD_3
+      name: TrinketBorder
       rect:
         serializedVersion: 2
-        x: 721
-        y: 547
-        width: 40
-        height: 40
+        x: 722
+        y: 548
+        width: 38
+        height: 38
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 13, y: 13, z: 13, w: 13}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -198,7 +198,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: leagueHUD_4
+      name: trinketBackground
       rect:
         serializedVersion: 2
         x: 924
@@ -207,7 +207,7 @@ TextureImporter:
         height: 44
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
-      border: {x: 13, y: 13, z: 13, w: 13}
+      border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -245,10 +245,10 @@ TextureImporter:
       name: smallBuff
       rect:
         serializedVersion: 2
-        x: 819
-        y: 638
-        width: 36
-        height: 36
+        x: 820
+        y: 639
+        width: 34
+        height: 34
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -267,10 +267,10 @@ TextureImporter:
       name: bigBuff
       rect:
         serializedVersion: 2
-        x: 799
-        y: 591
-        width: 46
-        height: 46
+        x: 800
+        y: 592
+        width: 44
+        height: 44
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -329,6 +329,94 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: TargetPortrait
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 744
+        width: 80
+        height: 79
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9872172e2d29c864caa878853ae8928e
+      internalID: 1281297736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TargetFrame
+      rect:
+        serializedVersion: 2
+        x: 261
+        y: 447
+        width: 415
+        height: 138
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 45c966efd2b0dda4d897c6abf7ee2287
+      internalID: -1810983929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TargetHealthBar
+      rect:
+        serializedVersion: 2
+        x: 463
+        y: 85
+        width: 158
+        height: 20
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 55f944a98cfa8e443baed51ffd215ed4
+      internalID: -237391583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ItemBackground
+      rect:
+        serializedVersion: 2
+        x: 970
+        y: 543
+        width: 50
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5babc37544c006c4e937ee02a6db1d4a
+      internalID: -1429265591
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -343,16 +431,20 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
+      ItemBackground: -1429265591
+      TargetFrame: -1810983929
+      TargetHealthBar: -237391583
+      TargetPortrait: 1281297736
+      TrinketBorder: 831980357
       bigBuff: -790265663
       info body: -582795851
       info border: 144458171
       leagueHUD_1: -1524662068
       leagueHUD_2: -410151880
-      leagueHUD_3: 831980357
-      leagueHUD_4: 1429183457
       leagueHUD_5: -472289346
       recall frame: -1668390486
       smallBuff: 2142971107
+      trinketBackground: 1429183457
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
