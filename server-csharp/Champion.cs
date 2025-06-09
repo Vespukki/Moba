@@ -8,9 +8,6 @@ public static partial class Module
     {
         [PrimaryKey, Unique]
         public string champ_id;
-        public string name;
-        public int base_ad;
-        public uint attack_range;
     }
 
     
@@ -26,8 +23,10 @@ public static partial class Module
         [SpacetimeDB.Index.BTree]
         public uint player_id;
 
-
+        public uint basic_attack_ability_instance_id;
     }
+
+  
 
     [Reducer]
     public static void AddChampion(ReducerContext ctx, string id, int base_ad, string name)
@@ -35,19 +34,19 @@ public static partial class Module
         ctx.Db.champion_stats.Insert(new ChampionStats
         {
             champ_id = id,
-            base_ad = base_ad,
-            name = name
-
         });
     }
 
     [Reducer]
-    public static void CreateChampionInstance(ReducerContext ctx, ChampionInstance champ)
+    public static void CreateChampionInstance(ReducerContext ctx, ChampionInstance champ, ActorId actorId)
     {
-        var _champStats = ctx.Db.champion_stats.champ_id.Find(champ.champ_id);
-        ChampionStats champStats;
-        if (_champStats != null) champStats = _champStats.Value;
-        else return;
+        Ability newBasicAttack = ctx.Db.ability.Insert(new()
+        {
+            ability_instance_id = 0,
+            ability_id = (uint)AbilityId.BasicAttack,
+            ready_time = ctx.Timestamp,
+        });
+
         var newEntity = ctx.Db.entity.Insert(new Entity() 
         {
             entity_id = 0, //auto increments
@@ -72,14 +71,16 @@ public static partial class Module
             rotation = 0,
             team = teamToBe,
             last_attack_time = ctx.Timestamp,
-            actor_id = (uint)ActorId.Fiora
+            actor_id = (uint)actorId
         });
 
         ChampionInstance newChamp = new()
         {
             player_id = champ.player_id,
             champ_id = champ.champ_id,
-            entity_id = newEntity.entity_id
+            entity_id = newEntity.entity_id,
+            basic_attack_ability_instance_id = newBasicAttack.ability_instance_id
+            
         };
         Log.Info($"Entity id of new champ is {newEntity.entity_id}");
 

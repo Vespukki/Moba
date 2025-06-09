@@ -140,7 +140,7 @@ public class PlayerController : MonoBehaviour
             Vector3 worldPosition = hit.point;
             ActorController newCurrentHighlight = null;
 
-            ActorController actor = null;
+            ChampionController champ = null;
             bool isPlayerChamp = false;
 
             if (hit.collider.CompareTag("Actor"))
@@ -149,7 +149,7 @@ public class PlayerController : MonoBehaviour
                 {
                     if (!hit.collider.TryGetComponent<ChampionController>(out var hitChamp) || hitChamp.ownerPlayerId != GameManager.LocalPlayerId)
                     {
-                        actor = hitChamp;
+                        champ = hitChamp;
                         newCurrentHighlight = hitActor;
                         consumedRay = true;
                     }
@@ -169,14 +169,14 @@ public class PlayerController : MonoBehaviour
                     case "Actor":
                         if (!isPlayerChamp)
                         {
-                            CurrentSelected = actor;
+                            CurrentSelected = champ;
 
                             consumedRay = true;
                         }
                         break;
 
                     case "Ground":
-                        CurrentSelected = actor;
+                        CurrentSelected = champ;
                         consumedRay = true;
                         break;
                     case "UI":
@@ -192,13 +192,13 @@ public class PlayerController : MonoBehaviour
                     case "Actor":
                         if (!isPlayerChamp)
                         {
-                            if (actor != null && actor.team != team)
+                            if (champ != null && champ.team != team)
                             {
-                                Debug.Log($"going to attack {actor.gameObject.name} now");
+                                Debug.Log($"going to attack {champ.gameObject.name} now");
 
                                 foreach (var id in ownedEntities)
                                 {
-                                    GameManager.Conn.Reducers.SetAttackTarget(id, actor.entityId);
+                                    GameManager.Conn.Reducers.SetAttackTarget(id, champ.entityId, champ.championInstance.BasicAttackAbilityInstanceId);
                                 }
 
                                 consumedRay = true;

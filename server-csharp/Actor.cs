@@ -100,13 +100,10 @@ public static partial class Module
 
         newActor.current_health = newCurrentHealth;
 
-        Log.Info($"health difference: {actor.current_health - newActor.current_health}");
-        Log.Info($"newActors health: {newActor.current_health}");
 
         ctx.Db.actor.entity_id.Delete(actor.entity_id);
         var insertedActor = ctx.Db.actor.Insert(newActor);
 
-        Log.Info($"newActors health after insert: {insertedActor.current_health}");
 
     }
 }

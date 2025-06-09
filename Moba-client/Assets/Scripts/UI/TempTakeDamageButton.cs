@@ -9,6 +9,8 @@ public class TempTakeDamageButton : MonoBehaviour
             ChampId = "dummy",
             EntityId = 0,
             PlayerId = 696969
-        });
+        },
+        SpacetimeDB.Types.ActorId.Dummy
+        );
     }
 }

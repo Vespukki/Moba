@@ -71,7 +71,7 @@ public static partial class Module
             champ_id = "fiora",
             player_id = player.player_id,
         };
-        CreateChampionInstance(ctx, champ);
+        CreateChampionInstance(ctx, champ, ActorId.Fiora);
 
         Log.Info($"player {player.player_id} Connected");
 
@@ -107,9 +107,6 @@ public static partial class Module
         ctx.Db.champion_stats.Insert(new ChampionStats
         {
             champ_id = "fiora",
-            base_ad = 50,
-            name = "Fiora",
-            attack_range = 150,
             
         });
 
@@ -117,9 +114,6 @@ public static partial class Module
         ctx.Db.champion_stats.Insert(new ChampionStats
         {
             champ_id = "dummy",
-            base_ad = 0,
-            name = "Target Dummy",
-            attack_range = 0,
             
         });
 

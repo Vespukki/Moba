@@ -9,6 +9,7 @@ using UnityEngine.VFX;
 public class ChampionController : ActorController
 {
     public uint ownerPlayerId;
+    public ChampionInstance championInstance;
 
     protected override void Start()
     {
@@ -40,11 +41,13 @@ public class ChampionController : ActorController
     {
         Initialize(entity, actor, baseStats);
         ownerPlayerId = champ.PlayerId;
+        championInstance = champ;
     }
 
     internal void UpdateChampion(ChampionInstance newChamp)
     {
         Debug.Log("Champ update");
+        championInstance = newChamp;
     }
 
     internal void UpdateWalker(Walking newWalker)
