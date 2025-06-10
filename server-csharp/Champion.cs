@@ -1,13 +1,17 @@
 ﻿using SpacetimeDB;
-using SpacetimeDB.Internal.TableHandles;
 
+[Type]
+public enum ChampId { Dummy, Fiora }
 public static partial class Module
 {
     [Table(Name = "champion_stats", Public = true)]
     public partial struct ChampionStats
     {
         [PrimaryKey, Unique]
-        public string champ_id;
+        public uint champ_id;
+
+        public AbilityId basic_attack_ability_id;
+        public AbilityId q_ability_id;
     }
 
     
@@ -18,33 +22,42 @@ public static partial class Module
         [PrimaryKey, Unique]
         public uint entity_id;
 
-        public string champ_id;
+        public ChampId champ_id;
 
         [SpacetimeDB.Index.BTree]
-        public uint player_id;
+        public Identity player_identity;
 
         public uint basic_attack_ability_instance_id;
+        public uint q_ability_instance_id;
     }
 
   
 
     [Reducer]
-    public static void AddChampion(ReducerContext ctx, string id, int base_ad, string name)
+    public static void AddChampion(ReducerContext ctx, ChampionStats champStats)
     {
-        ctx.Db.champion_stats.Insert(new ChampionStats
-        {
-            champ_id = id,
-        });
+        ctx.Db.champion_stats.Insert(champStats);
     }
 
     [Reducer]
     public static void CreateChampionInstance(ReducerContext ctx, ChampionInstance champ, ActorId actorId)
     {
+        var nChampStats = ctx.Db.champion_stats.champ_id.Find((uint)champ.champ_id);
+        if (nChampStats == null) return;
+        ChampionStats champStats = nChampStats.Value;
+
         Ability newBasicAttack = ctx.Db.ability.Insert(new()
         {
             ability_instance_id = 0,
-            ability_id = (uint)AbilityId.BasicAttack,
+            ability_id = champStats.basic_attack_ability_id,
             ready_time = ctx.Timestamp,
+        });
+
+        Ability newQAbility = ctx.Db.ability.Insert(new()
+        {
+            ability_id = champStats.q_ability_id,
+            ability_instance_id = 0,
+            ready_time = ctx.Timestamp
         });
 
         var newEntity = ctx.Db.entity.Insert(new Entity() 
@@ -54,7 +67,7 @@ public static partial class Module
             last_position = new(0,0),
         });
 
-        var player = ctx.Db.player.player_id.Find(champ.player_id);
+        var player = ctx.Db.player.identity.Find(champ.player_identity);
 
         Team teamToBe = Team.Neutral;
 
@@ -76,10 +89,11 @@ public static partial class Module
 
         ChampionInstance newChamp = new()
         {
-            player_id = champ.player_id,
+            player_identity = champ.player_identity,
             champ_id = champ.champ_id,
             entity_id = newEntity.entity_id,
-            basic_attack_ability_instance_id = newBasicAttack.ability_instance_id
+            basic_attack_ability_instance_id = newBasicAttack.ability_instance_id,
+            q_ability_instance_id = newQAbility.ability_instance_id,
             
         };
         Log.Info($"Entity id of new champ is {newEntity.entity_id}");
@@ -104,6 +118,9 @@ public static partial class Module
         {
             ctx.Db.buff.buff_instance_id.Delete(buff.buff_instance_id);
         }
+
+        ctx.Db.ability.ability_instance_id.Delete(champ.basic_attack_ability_instance_id);
+        ctx.Db.ability.ability_instance_id.Delete(champ.q_ability_instance_id);
     }
 
 }

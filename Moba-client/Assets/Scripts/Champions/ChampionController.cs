@@ -40,7 +40,6 @@ public class ChampionController : ActorController
     public void Initialize(Entity entity, Actor actor, ChampionInstance champ, ActorBaseStats baseStats)
     {
         Initialize(entity, actor, baseStats);
-        ownerPlayerId = champ.PlayerId;
         championInstance = champ;
     }
 

@@ -161,7 +161,7 @@ public class PlayerController : MonoBehaviour
             }
 
             CurrentHover = newCurrentHighlight;
-            
+
             if (Input.GetMouseButtonDown(0))
             {
                 switch (hit.collider.tag)
@@ -185,7 +185,7 @@ public class PlayerController : MonoBehaviour
                         break;
                 }
             }
-            if (Input.GetMouseButtonDown(1))
+            else if (Input.GetMouseButtonDown(1))
             {
                 switch (hit.collider.tag)
                 {
@@ -198,7 +198,7 @@ public class PlayerController : MonoBehaviour
 
                                 foreach (var id in ownedEntities)
                                 {
-                                    GameManager.Conn.Reducers.SetAttackTarget(id, champ.entityId, champ.championInstance.BasicAttackAbilityInstanceId);
+                                    GameManager.Conn.Reducers.SetAttackTarget(id, champ.entityId);
                                 }
 
                                 consumedRay = true;
@@ -219,6 +219,26 @@ public class PlayerController : MonoBehaviour
                         break;
 
                     case "UI":
+                        consumedRay = true;
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+            else if (Input.GetKeyDown(KeyCode.Q))
+            {
+                switch (hit.collider.tag)
+                {
+                    case "Actor":
+                        foreach (var id in ownedEntities)
+                        {
+                            Debug.Log(champ.championInstance.QAbilityInstanceId + "q press");
+                            GameManager.Conn.Reducers.SetQTarget(id, champ.entityId);
+                        }
+                        consumedRay = true;
+                        break;
+                    case "Ground":
                         consumedRay = true;
                         break;
                     default:

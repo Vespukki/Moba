@@ -43,7 +43,7 @@ public static partial class Module
     public enum HitType {BasicAttack, Spell}
 
     [Reducer]
-    public static void SetAttackTarget(ReducerContext ctx, uint entityId, uint targetEntityId, uint abilityId)
+    public static void SetQTarget(ReducerContext ctx, uint entityId, uint targetEntityId)
     {
         #region entity checking
         var nullableEntity = ctx.Db.entity.entity_id.Find(entityId);
@@ -73,9 +73,55 @@ public static partial class Module
         }
         ChampionInstance champ = nChamp.Value;
 
-        var nAbility = ctx.Db.ability.ability_instance_id.Find(abilityId);
-        if (nAbility == null) return;
-        Ability ability = nAbility.Value;
+
+        #endregion
+
+        ctx.Db.walking.entity_id.Delete(entityId);
+
+        var newAttacking = new Attacking()
+        {
+            entity_id = entityId,
+            target_entity_id = targetEntityId,
+            attack_start_time = ctx.Timestamp,
+            attack_state = AttackState.Ready,
+            ability_instance_id = champ.q_ability_instance_id
+        };
+
+        ctx.Db.attacking.entity_id.Delete(entityId);
+        ctx.Db.attacking.Insert(newAttacking);
+    }
+
+    [Reducer]
+    public static void SetAttackTarget(ReducerContext ctx, uint entityId, uint targetEntityId)
+    {
+        #region entity checking
+        var nullableEntity = ctx.Db.entity.entity_id.Find(entityId);
+
+        if (nullableEntity == null)
+        {
+            Log.Info($"passed entity {entityId} is null");
+            return;
+        }
+
+        Entity entity = nullableEntity.Value;
+
+        var nullableTargetEntity = ctx.Db.entity.entity_id.Find(targetEntityId);
+
+        if (nullableTargetEntity == null)
+        {
+            Log.Info($"passed entity {targetEntityId} is null");
+            return;
+        }
+
+        Entity targetEntity = nullableTargetEntity.Value;
+
+        var nChamp = ctx.Db.champion_instance.entity_id.Find(entityId);
+        if (nChamp == null)
+        {
+            return;
+        }
+        ChampionInstance champ = nChamp.Value;
+
 
         #endregion
 

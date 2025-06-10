@@ -17,6 +17,7 @@ public static partial class Module
     {
         [PrimaryKey]
         public Identity identity;
+
         [Unique, AutoInc]
         public uint player_id;
         public string name;
@@ -68,8 +69,8 @@ public static partial class Module
         }
         var champ = new ChampionInstance
         {
-            champ_id = "fiora",
-            player_id = player.player_id,
+            champ_id = ChampId.Fiora,
+            player_identity = player.identity,
         };
         CreateChampionInstance(ctx, champ, ActorId.Fiora);
 
@@ -89,7 +90,7 @@ public static partial class Module
         ctx.Db.logged_out_player.Insert(player);
         ctx.Db.player.identity.Delete(player.identity);
 
-        foreach (var champ in ctx.Db.champion_instance.player_id.Filter(player.player_id))
+        foreach (var champ in ctx.Db.champion_instance.player_identity.Filter(player.identity))
         {
             DeleteChampionInstance(ctx, champ);
         }
@@ -106,14 +107,18 @@ public static partial class Module
         Log.Info("Adding Fiora as default champion");
         ctx.Db.champion_stats.Insert(new ChampionStats
         {
-            champ_id = "fiora",
-            
+            champ_id = (uint)ChampId.Fiora,
+            basic_attack_ability_id = AbilityId.BasicAttack,
+            q_ability_id = AbilityId.FioraQ
+
         });
 
         Log.Info("Adding Target Dummy as default champion");
         ctx.Db.champion_stats.Insert(new ChampionStats
         {
-            champ_id = "dummy",
+            champ_id = (uint)ChampId.Dummy,
+            basic_attack_ability_id = (uint)AbilityId.None,
+            q_ability_id = (uint)AbilityId.None,
             
         });
 

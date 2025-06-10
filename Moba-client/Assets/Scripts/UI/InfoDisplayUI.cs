@@ -23,6 +23,6 @@ public class InfoDisplayUI : MonoBehaviour
         }
         sourceText.SetText(buff.Source);
 
-        BuffDisplay.LoadBuffSpriteAsync(buff, (Sprite sprite) => spriteImage.sprite = sprite);
+        SpriteManager.LoadBuffSpriteAsync(buff, (Sprite sprite) => spriteImage.sprite = sprite);
     }
 }

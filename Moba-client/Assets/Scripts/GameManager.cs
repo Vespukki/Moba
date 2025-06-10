@@ -3,6 +3,7 @@ using SpacetimeDB.Types;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,10 +19,15 @@ public class GameManager : MonoBehaviour
     public static uint LocalPlayerId { get; private set; }
     public static DbConnection Conn { get; private set; }
 
-    public Dictionary<uint, ChampionController> championInstances = new();
-    /*public Dictionary<uint, Buff> buffsByBuffId = new();*/
+    public Dictionary<uint, ChampionController> championControllers = new();
+    public Dictionary<uint, ChampionInstance> championInstances = new();
     public Dictionary<uint, BuffDisplay> buffIdToBuffDisplay = new();
     public Dictionary<uint, List<Buff>> buffsByEntityId = new(); //EntityID = 0 means its pending an assignment (or maybe its lost?)
+    public Dictionary<uint, Ability> abilities = new();
+
+    public AbilityDisplay qAbilityDisplay;
+
+    public bool gameInitialized = false;
 
     private void Start()
     {
@@ -83,6 +89,9 @@ public class GameManager : MonoBehaviour
 
         conn.Db.RegisteredHits.OnInsert += RegisteredHitsOnInsert;
 
+        conn.Db.Ability.OnInsert += AbilityOnInsert;
+        conn.Db.Ability.OnUpdate += AbilityOnUpdate;
+
 
 
         OnConnected?.Invoke();
@@ -93,6 +102,11 @@ public class GameManager : MonoBehaviour
             .SubscribeToAllTables();
     }
 
+    private void AbilityOnUpdate(EventContext context, Ability oldRow, Ability newRow)
+    {
+        qAbilityDisplay.UpdateAbility(newRow);
+    }
+
     private void BuffOnUpdate(EventContext context, Buff oldRow, Buff newRow)
     {
         /*if (buffIdToBuffDisplay.TryGetValue(oldRow.BuffInstanceId, out BuffDisplay display))
@@ -101,10 +115,16 @@ public class GameManager : MonoBehaviour
         }*/
     }
 
+    private void AbilityOnInsert(EventContext ctx, Ability ability)
+    {
+        Debug.Log("Ability Added");
+        abilities.Add(ability.AbilityInstanceId, ability);
+    }
+
     private void BuffOnDelete(EventContext context, Buff buff)
     {
         Debug.Log("buff removed");
-        if (championInstances.TryGetValue(buff.EntityId, out ChampionController champ))
+        if (championControllers.TryGetValue(buff.EntityId, out ChampionController champ))
         {
             champ.RemoveBuff(buff);
 
@@ -123,7 +143,7 @@ public class GameManager : MonoBehaviour
     private void BuffOnInsert(EventContext context, Buff buff)
     {
         Debug.Log("buff added");
-        if (championInstances.TryGetValue(buff.EntityId, out ChampionController champ))
+        if (championControllers.TryGetValue(buff.EntityId, out ChampionController champ))
         {
             champ.AddBuff(buff);
 
@@ -155,8 +175,8 @@ public class GameManager : MonoBehaviour
 
     private void RegisteredHitsOnInsert(EventContext context, RegisteredHits row)
     {
-        if (championInstances.TryGetValue(row.HitEntityId, out ChampionController hitChamp)
-            && championInstances.TryGetValue(row.SourceEntityId, out ChampionController sourceChamp))
+        if (championControllers.TryGetValue(row.HitEntityId, out ChampionController hitChamp)
+            && championControllers.TryGetValue(row.SourceEntityId, out ChampionController sourceChamp))
         {
             hitChamp.PlayVFX(sourceChamp.hitVfx);
         }
@@ -164,7 +184,7 @@ public class GameManager : MonoBehaviour
 
     private void AttackingOnDelete(EventContext context, Attacking row)
     {
-        if (championInstances.TryGetValue(row.EntityId, out var champController))
+        if (championControllers.TryGetValue(row.EntityId, out var champController))
         {
             champController.AttackingDeleted(row);
         }
@@ -172,7 +192,7 @@ public class GameManager : MonoBehaviour
 
     private void AttackingOnUpdate(EventContext context, Attacking oldRow, Attacking newRow)
     {
-        if (championInstances.TryGetValue(newRow.EntityId, out var champController))
+        if (championControllers.TryGetValue(newRow.EntityId, out var champController))
         {
             champController.UpdateAttacker(newRow);
         }
@@ -180,7 +200,7 @@ public class GameManager : MonoBehaviour
 
     private void AttackingOnInsert(EventContext context, Attacking row)
     {
-        if(championInstances.TryGetValue(row.EntityId, out var champController))
+        if(championControllers.TryGetValue(row.EntityId, out var champController))
         {
            champController.AttackingCreated(row);
         }
@@ -192,7 +212,7 @@ public class GameManager : MonoBehaviour
     }
     private void ActorOnInsert(EventContext context, Actor row)
     {
-        if (championInstances.TryGetValue(row.EntityId, out ChampionController champController))
+        if (championControllers.TryGetValue(row.EntityId, out ChampionController champController))
         {
             champController.InsertActor(row);
             Debug.Log("actor on Insert");
@@ -202,7 +222,7 @@ public class GameManager : MonoBehaviour
 
     private void ActorOnUpdate(EventContext context, Actor oldRow, Actor newRow)
     {
-        if (championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
+        if (championControllers.TryGetValue(oldRow.EntityId, out ChampionController champController))
         {
             champController.UpdateActor(oldRow, newRow);
         }
@@ -212,7 +232,7 @@ public class GameManager : MonoBehaviour
 
     private void EntityOnUpdate(EventContext context, Entity oldRow, Entity newRow)
     {
-        if (championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
+        if (championControllers.TryGetValue(oldRow.EntityId, out ChampionController champController))
         {
             champController.UpdateEntity(newRow);
         }
@@ -221,9 +241,34 @@ public class GameManager : MonoBehaviour
     private void HandleSubscriptionApplied(SubscriptionEventContext ctx)
     {
         Debug.Log("Subscription applied!");
+
+        //spawn the champions
+        foreach (var champ in championInstances.Values)
+        {
+            Entity entity = ctx.Db.Entity.EntityId.Find(champ.EntityId);
+            Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
+            ActorBaseStats baseStats = ctx.Db.ActorBaseStats.ActorId.Find(actor.ActorId);
+
+            SpawnChampion(entity, actor, champ, baseStats);
+        }
+
+        gameInitialized = true;
         OnSubscriptionApplied?.Invoke();
     }
 
+    private void SpawnChampion(Entity entity, Actor actor, ChampionInstance champ, ActorBaseStats baseStats)
+    {
+
+        var spawned = PrefabManager.SpawnChampion(entity, actor, champ, baseStats);
+        championControllers.Add(champ.EntityId, spawned);
+
+
+        if (champ.PlayerIdentity == LocalIdentity)
+        {
+            PlayerController.Local.ownedEntities.Add(champ.EntityId);
+            localBuffManager.Initialize(spawned);
+        }
+    }
 
     void HandleConnectError(Exception ex)
     {
@@ -241,19 +286,19 @@ public class GameManager : MonoBehaviour
 
     private void ChampionInstanceOnInsert(EventContext ctx, ChampionInstance champ)
     {
-        Entity entity = ctx.Db.Entity.EntityId.Find(champ.EntityId);
-        Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
-        ActorBaseStats baseStats = ctx.Db.ActorBaseStats.ActorId.Find(actor.ActorId);
+        Debug.Log("Champion instance added");
 
-        var spawned = PrefabManager.SpawnChampion(entity, actor, champ, baseStats);
-        championInstances.Add(champ.EntityId, spawned);
+        championInstances.Add(champ.EntityId, champ);
 
-
-        if (champ.PlayerId == LocalPlayerId)
+        if (gameInitialized)
         {
-            PlayerController.Local.ownedEntities.Add(champ.EntityId);
-            localBuffManager.Initialize(spawned);
+            Entity entity = ctx.Db.Entity.EntityId.Find(champ.EntityId);
+            Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
+            ActorBaseStats baseStats = ctx.Db.ActorBaseStats.ActorId.Find(actor.ActorId);
+
+            SpawnChampion(entity, actor, champ, baseStats);
         }
+       
 
         List<Buff> buffsToMoveOver = new();
         if (buffsByEntityId.TryGetValue(0, out List<Buff> buffList))
@@ -270,7 +315,7 @@ public class GameManager : MonoBehaviour
             {
 
                 buffsByEntityId.Remove(buff.BuffInstanceId);
-                ChampionController champController = championInstances[champ.EntityId];
+                ChampionController champController = championControllers[champ.EntityId];
                 champController.AddBuff(buff);
                 if (buffsByEntityId.TryGetValue(champ.EntityId, out List<Buff> buffs))
                 {
@@ -294,7 +339,7 @@ public class GameManager : MonoBehaviour
         var playerController = PrefabManager.SpawnPlayer(player);
 
 
-        foreach (var champ in championInstances.Values)
+        foreach (var champ in championControllers.Values)
         {
             if (champ.ownerPlayerId == player.PlayerId)
             {
@@ -308,11 +353,12 @@ public class GameManager : MonoBehaviour
     void ChampionStatsOnInsert(EventContext ctx, ChampionStats addedvalue)
     {
         Debug.Log(addedvalue);
+
     }
 
     private void ChampionInstanceOnUpdate(EventContext context, ChampionInstance oldRow, ChampionInstance newRow)
     {
-        if(championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
+        if(championControllers.TryGetValue(oldRow.EntityId, out ChampionController champController))
         {
             champController.UpdateChampion(newRow);
         }
@@ -320,7 +366,7 @@ public class GameManager : MonoBehaviour
 
     private void WalkingOnUpdate(EventContext context, Walking oldRow, Walking newRow)
     {
-        if (championInstances.TryGetValue(oldRow.EntityId, out ChampionController champController))
+        if (championControllers.TryGetValue(oldRow.EntityId, out ChampionController champController))
         {
             champController.UpdateWalker(newRow);
         }
@@ -328,7 +374,7 @@ public class GameManager : MonoBehaviour
 
     private void WalkingOnDelete(EventContext context, Walking row)
     {
-        if (championInstances.TryGetValue(row.EntityId, out ChampionController champController))
+        if (championControllers.TryGetValue(row.EntityId, out ChampionController champController))
         {
             var entity = context.Db.Entity.EntityId.Find(row.EntityId);
             var pos = entity.Position;
@@ -338,7 +384,7 @@ public class GameManager : MonoBehaviour
 
     private void WalkingOnInsert(EventContext ctx, Walking row)
     {
-        if (championInstances.TryGetValue(row.EntityId, out ChampionController champController))
+        if (championControllers.TryGetValue(row.EntityId, out ChampionController champController))
         {
             champController.UpdateWalker(row);
         }

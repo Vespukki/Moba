@@ -55,7 +55,7 @@ public class BuffDisplay : MonoBehaviour, IHoverable
             stackText.text = newBuff.Stacks.ToString();
         }
 
-        LoadBuffSpriteAsync(newBuff, (Sprite sprite) => buffImage.sprite = sprite);
+        SpriteManager.LoadBuffSpriteAsync(newBuff, (Sprite sprite) => buffImage.sprite = sprite);
 
     }
 
@@ -83,27 +83,5 @@ public class BuffDisplay : MonoBehaviour, IHoverable
         }
     }
 
-    public static async void LoadBuffSpriteAsync(Buff buff, Action<Sprite> onLoaded)
-    {
-        if (SpriteManager.spriteLookup.TryGetValue(buff.BuffId, out Sprite sprite))
-        {
-            onLoaded?.Invoke(sprite);
-            return;
-        }
-
-
-        AsyncOperationHandle<Sprite> handle = Addressables.LoadAssetAsync<Sprite>(buff.BuffId.ToString());
-        await handle.Task;
-
-        if (handle.Status == AsyncOperationStatus.Succeeded)
-        {
-            SpriteManager.spriteLookup[buff.BuffId] = handle.Result;
-            onLoaded?.Invoke(handle.Result);
-        }
-        else
-        {
-            Debug.LogWarning($"Failed to load sprite with id: {buff.BuffId}");
-            onLoaded?.Invoke(null); // optionally invoke with null to indicate failure
-        }
-    }
+    
 }

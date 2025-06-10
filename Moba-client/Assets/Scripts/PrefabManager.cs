@@ -8,7 +8,7 @@ public class PrefabManager : MonoBehaviour
     public static PrefabManager Instance;
     public PlayerController PlayerPrefab;
 
-    public Dictionary<string, GameObject> idsToChampPrefabs = new();
+    public Dictionary<ChampId, GameObject> idsToChampPrefabs = new();
     [SerializeField] GameObject fioraPrefab;
     [SerializeField] GameObject dummyPrefab;
     [SerializeField] GameObject buffDisplayPrefab;
@@ -21,12 +21,13 @@ public class PrefabManager : MonoBehaviour
         }
         else if (Instance != this) 
         {
+
             Debug.LogError("Extra Prefab Manager Spawned");
         }
 
         idsToChampPrefabs.Clear();
-        idsToChampPrefabs.Add("fiora", fioraPrefab);
-        idsToChampPrefabs.Add("dummy", dummyPrefab);
+        idsToChampPrefabs.Add(ChampId.Fiora, fioraPrefab);
+        idsToChampPrefabs.Add(ChampId.Dummy, dummyPrefab);
     }
 
     public static PlayerController SpawnPlayer(Player player)
@@ -44,7 +45,17 @@ public class PrefabManager : MonoBehaviour
             var champController = Instantiate(champPrefab).GetComponentInChildren<ChampionController>();
             champController.name = $"ChampionController - {champ.ChampId}";
             champController.Initialize(entity, actor, champ, baseStats);
+
+            if (GameManager.LocalIdentity == champ.PlayerIdentity)
+            {
+                if (GameManager.Instance.abilities.TryGetValue(champ.QAbilityInstanceId, out Ability qAbility))
+                {
+                    GameManager.Instance.qAbilityDisplay.Initialize(qAbility);
+                }
+            }
+            
             return champController;
+
         }
 
         else

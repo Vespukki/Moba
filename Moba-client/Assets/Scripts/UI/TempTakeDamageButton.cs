@@ -1,4 +1,5 @@
 using UnityEngine;
+using SpacetimeDB.Types;
 
 public class TempTakeDamageButton : MonoBehaviour
 {
@@ -6,9 +7,9 @@ public class TempTakeDamageButton : MonoBehaviour
     {
         GameManager.Conn.Reducers.CreateChampionInstance(new SpacetimeDB.Types.ChampionInstance()
         {
-            ChampId = "dummy",
+            ChampId = 0,
             EntityId = 0,
-            PlayerId = 696969
+            PlayerIdentity = new()
         },
         SpacetimeDB.Types.ActorId.Dummy
         );
