@@ -52,28 +52,59 @@ public class ChampionController : ActorController
     internal void UpdateWalker(Walking newWalker)
     {
         targetPos = DbPositionToWorldPosition(newWalker.TargetWalkPos, transform.position.y);
+        currentWalk = newWalker;
+    }
+
+    public void DeleteWalker()
+    {
+        currentWalk = null;
     }
 
     public void AttackingCreated(Attacking attack)
     {
-        UpdateAttacker(attack);
+        UpdateAttacker(null, attack);
     }
 
-    internal void UpdateAttacker(Attacking attack)
+    internal void UpdateAttacker(Attacking lastAttack, Attacking newAttack)
     {
-        if (attack.AttackState == AttackState.Ready)
+        if (newAttack.AbilityInstanceId == championInstance.BasicAttackAbilityInstanceId)
         {
-            animator.SetBool("AttackStarted", false);
+            if (newAttack.AttackState == AttackState.Ready)
+            {
+                animator.SetBool("AttackStarted", false);
+            }
+            else
+            {
+                animator.SetFloat("RNG", UnityEngine.Random.Range(0f, 1f));
+                animator.SetBool("AttackStarted", true);
+            }
         }
-        else
+        else if (newAttack.AbilityInstanceId == championInstance.QAbilityInstanceId)
         {
-            animator.SetFloat("RNG", UnityEngine.Random.Range(0f, 1f));
-            animator.SetBool("AttackStarted", true);
+            if (lastAttack != null && newAttack.AttackState == lastAttack.AttackState) return;
+            //assume everyone is fiora for now
+            if(GameManager.Instance.championControllers.TryGetValue(newAttack.TargetEntityId, out ChampionController targetChamp))
+            {
+                if (newAttack.AttackState == AttackState.Ready)
+                {
+                    animator.SetTriggerOneFrame(this, "StopDash");
+                }
+                else if (newAttack.AttackState == AttackState.Starting)
+                {
+                    animator.SetTriggerOneFrame(this, "StartDash");
+                }
+            }
         }
+       
     }
     public void AttackingDeleted(Attacking attack)
     {
+        Debug.Log("ATTACK DELETED: " +  attack.AbilityInstanceId);
         animator.SetBool("AttackStarted", false);
         animator.SetTriggerOneFrame(this, "CancelAttackAnimation");
+        if (attack.AbilityInstanceId == championInstance.QAbilityInstanceId)
+        {
+            animator.SetTriggerOneFrame(this, "StopDash");
+        }
     }
 }

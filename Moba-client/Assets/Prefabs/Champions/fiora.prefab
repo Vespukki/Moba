@@ -2669,7 +2669,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lerpTimer: 0
-  lerpAmount: 0.01
+  lerpAmount: 0.1
   entityId: 0
   hitVfx:
     hitVfxPrefab: {fileID: 2343060853285553667, guid: 3ff4d70e2f466a14789b1171b05b4920, type: 3}

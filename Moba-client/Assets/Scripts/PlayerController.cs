@@ -234,11 +234,15 @@ public class PlayerController : MonoBehaviour
                         foreach (var id in ownedEntities)
                         {
                             Debug.Log(champ.championInstance.QAbilityInstanceId + "q press");
-                            GameManager.Conn.Reducers.SetQTarget(id, champ.entityId);
+                            GameManager.Conn.Reducers.SetQTarget(id, champ.entityId, EntityController.WorldPositionToDbPosition(worldPosition));
                         }
                         consumedRay = true;
                         break;
                     case "Ground":
+                        foreach (var id in ownedEntities)
+                        {
+                            GameManager.Conn.Reducers.SetQTarget(id, id, EntityController.WorldPositionToDbPosition(worldPosition));
+                        }
                         consumedRay = true;
                         break;
                     default:

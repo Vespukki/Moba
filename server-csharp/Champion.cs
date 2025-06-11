@@ -51,13 +51,15 @@ public static partial class Module
             ability_instance_id = 0,
             ability_id = champStats.basic_attack_ability_id,
             ready_time = ctx.Timestamp,
+            targeted = true
         });
 
         Ability newQAbility = ctx.Db.ability.Insert(new()
         {
             ability_id = champStats.q_ability_id,
             ability_instance_id = 0,
-            ready_time = ctx.Timestamp
+            ready_time = ctx.Timestamp,
+            targeted = false
         });
 
         var newEntity = ctx.Db.entity.Insert(new Entity() 

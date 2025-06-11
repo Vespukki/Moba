@@ -27,6 +27,7 @@ public class AbilityDisplay : MonoBehaviour
 
     private void Update()
     {
+        if (ability == null) return;
         DateTime epochStart = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         long cur_time = (long)((System.DateTime.UtcNow - epochStart).TotalMilliseconds * 1000);
 

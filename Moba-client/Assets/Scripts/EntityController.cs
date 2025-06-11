@@ -9,6 +9,8 @@ public class EntityController : MonoBehaviour
     protected Vector3 targetPos;
     public uint entityId;
 
+    public Walking currentWalk;
+
     const float SNAP_DIST = 1000f;
 
     private Vector3 lastFramePosition;
@@ -37,6 +39,7 @@ public class EntityController : MonoBehaviour
 
     public void UpdateEntity(Entity newEntity)
     {
+        Debug.Log("ENTITY UPDATED");
         lerpTimer = 0;
         lerpTarget = DbPositionToWorldPosition(newEntity.Position, transform.position.y);
     }
@@ -60,11 +63,14 @@ public class EntityController : MonoBehaviour
 
         lerpTimer += lerpAmount;
 
+        
+
         var difference = targetPos - lerpTarget;
 
         float distance = difference.magnitude;
 
         float distanceToMove = moveSpeed * Time.deltaTime;
+        if (currentWalk == null) distanceToMove = 0f;
 
         var direction = difference.normalized;
 
@@ -78,7 +84,10 @@ public class EntityController : MonoBehaviour
             newPos = lerpTarget + distanceToMove * direction;
         }
         lerpTarget = newPos;
+
+        
         Vector3 transformExtra = distanceToMove * direction;
+        
 
         if (Vector3.Distance((distanceToMove * direction), lerpTarget) > SNAP_DIST)
         {
@@ -88,11 +97,11 @@ public class EntityController : MonoBehaviour
         transform.position = Vector3.Lerp(transform.position + transformExtra, lerpTarget, lerpTimer);
     }
 
-    public Vector3 DbPositionToWorldPosition(DbVector2 dbVector, float height)
+    public static Vector3 DbPositionToWorldPosition(DbVector2 dbVector, float height)
     {
         return new Vector3(dbVector.X, height, dbVector.Y);
     }
-    public DbVector2 WorldPositionToDbPosition(Vector3 vector3)
+    public static DbVector2 WorldPositionToDbPosition(Vector3 vector3)
     {
         return new DbVector2(vector3.x, vector3.z);
     }

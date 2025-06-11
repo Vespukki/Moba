@@ -104,7 +104,10 @@ public class GameManager : MonoBehaviour
 
     private void AbilityOnUpdate(EventContext context, Ability oldRow, Ability newRow)
     {
-        qAbilityDisplay.UpdateAbility(newRow);
+        if (newRow.AbilityInstanceId == qAbilityDisplay.ability.AbilityInstanceId)
+        {
+            qAbilityDisplay.UpdateAbility(newRow);
+        }
     }
 
     private void BuffOnUpdate(EventContext context, Buff oldRow, Buff newRow)
@@ -194,7 +197,7 @@ public class GameManager : MonoBehaviour
     {
         if (championControllers.TryGetValue(newRow.EntityId, out var champController))
         {
-            champController.UpdateAttacker(newRow);
+            champController.UpdateAttacker(oldRow, newRow);
         }
     }
 
@@ -378,7 +381,7 @@ public class GameManager : MonoBehaviour
         {
             var entity = context.Db.Entity.EntityId.Find(row.EntityId);
             var pos = entity.Position;
-            champController.UpdateWalker(new(entity.EntityId, entity.Position));
+            champController.DeleteWalker();
         }
     }
 

@@ -30,6 +30,7 @@ public static partial class Module
         [PrimaryKey, Unique]
         public uint entity_id;
 
+        [SpacetimeDB.Index.BTree]
         public uint ability_instance_id;
 
         public uint target_entity_id;
@@ -37,13 +38,16 @@ public static partial class Module
         public Timestamp attack_start_time;
 
         public AttackState attack_state;
+
+        public DbVector2 target_position; 
     }
 
     [Type]
     public enum HitType {BasicAttack, Spell}
 
+
     [Reducer]
-    public static void SetQTarget(ReducerContext ctx, uint entityId, uint targetEntityId)
+    public static void SetQTarget(ReducerContext ctx, uint entityId, uint targetEntityId, DbVector2 position)
     {
         #region entity checking
         var nullableEntity = ctx.Db.entity.entity_id.Find(entityId);
@@ -73,9 +77,9 @@ public static partial class Module
         }
         ChampionInstance champ = nChamp.Value;
 
-
         #endregion
 
+       
         ctx.Db.walking.entity_id.Delete(entityId);
 
         var newAttacking = new Attacking()
@@ -84,8 +88,10 @@ public static partial class Module
             target_entity_id = targetEntityId,
             attack_start_time = ctx.Timestamp,
             attack_state = AttackState.Ready,
-            ability_instance_id = champ.q_ability_instance_id
+            ability_instance_id = champ.q_ability_instance_id,
+            target_position = position
         };
+
 
         ctx.Db.attacking.entity_id.Delete(entityId);
         ctx.Db.attacking.Insert(newAttacking);
@@ -226,6 +232,10 @@ public static partial class Module
     public static void HandleBasicAttack(ReducerContext ctx, Attacking attack, Ability ability, Entity entity, Entity targetEntity, Actor actor, ActorBaseStats actorBaseStats)
     {
 
+        if (WalkIfTooFarAway(ctx, entity, targetEntity.position, actorBaseStats.attack_range)) return;
+
+        //beyond here, we are in range
+
         Actor newActor = actor;
         Attacking newAttack = attack;
         Ability newAbility = ability;
@@ -303,6 +313,15 @@ public static partial class Module
         }
         Actor actor = nullableUnit.Value;
 
+       
+
+        var nBaseStats = ctx.Db.actor_base_stats.actor_id.Find(actor.actor_id);
+        if (nBaseStats == null) return;
+        ActorBaseStats actorBaseStats = nBaseStats.Value;
+
+        #endregion
+
+
         var nullableTargetEntity = ctx.Db.entity.entity_id.Find(attack.target_entity_id);
         if (nullableTargetEntity == null)
         {
@@ -311,21 +330,11 @@ public static partial class Module
         }
         Entity targetEntity = nullableTargetEntity.Value;
 
-        var nBaseStats = ctx.Db.actor_base_stats.actor_id.Find(actor.actor_id);
-        if (nBaseStats == null) return;
-        ActorBaseStats actorBaseStats = nBaseStats.Value;
-
-
-        #endregion
-
-
-        if (WalkIfTooFarAway(ctx, entity, targetEntity.position, actorBaseStats.attack_range)) return;
-
-        //beyond here, we are in range
-
         UseTargetedAbility(ctx, ability, attack, entity, actor, targetEntity, actorBaseStats);
 
-        
+
+
+
 
     }
 
