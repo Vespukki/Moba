@@ -2,6 +2,7 @@ using SpacetimeDB;
 using SpacetimeDB.Types;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using static UnityEngine.EventSystems.EventTrigger;
 
@@ -181,7 +182,31 @@ public class GameManager : MonoBehaviour
         if (championControllers.TryGetValue(row.HitEntityId, out ChampionController hitChamp)
             && championControllers.TryGetValue(row.SourceEntityId, out ChampionController sourceChamp))
         {
-            hitChamp.PlayVFX(sourceChamp.hitVfx);
+            if ((AbilityId)row.SourceAbilityId == AbilityId.FioraQ)
+            {
+                // Get world positions
+                Vector3 sourcePos = sourceChamp.centerTransform.position;
+                Vector3 hitPos = hitChamp.centerTransform.position;
+
+                // Convert to screen positions
+                Vector3 screenSource = Camera.main.WorldToScreenPoint(sourcePos);
+                Vector3 screenTarget = Camera.main.WorldToScreenPoint(hitPos);
+
+                // Calculate the direction vector in screen space
+                Vector2 direction = (Vector2)(screenTarget - screenSource);
+
+                // Calculate the angle in degrees
+                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+               
+
+
+                hitChamp.PlayVFX(sourceChamp.qHitVfx, sourceChamp.centerTransform.position, angle);
+            }
+            else
+            {                
+                hitChamp.PlayVFX(sourceChamp.hitVfx, hitChamp.centerTransform.position, 0);
+            }
         }
     }
 

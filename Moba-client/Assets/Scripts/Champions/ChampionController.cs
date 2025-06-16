@@ -18,13 +18,19 @@ public class ChampionController : ActorController
 
     protected override void Update()
     {
+        animator.SetBool("QDashing", startedDash);
         base.Update();
     }
 
-    public async void PlayVFX(HitVFX hitVfx)
+    public async void PlayVFX(HitVFX hitVfx, Vector3 position, float angle)
     {
         Debug.Log("play vfx");
-        var vfx = Instantiate(hitVfx.hitVfxPrefab, centerTransform);
+        var vfx = Instantiate(hitVfx.hitVfxPrefab, position, Quaternion.Euler(0, angle, 0));
+
+        if (vfx.TryGetComponent(out FaceCamera faceCamera))
+        {
+            faceCamera.rotation = angle;
+        }
 
         float timer = hitVfx.timer;
 
@@ -65,6 +71,8 @@ public class ChampionController : ActorController
         UpdateAttacker(null, attack);
     }
 
+    private bool startedDash = false;
+
     internal void UpdateAttacker(Attacking lastAttack, Attacking newAttack)
     {
         if (newAttack.AbilityInstanceId == championInstance.BasicAttackAbilityInstanceId)
@@ -87,11 +95,14 @@ public class ChampionController : ActorController
             {
                 if (newAttack.AttackState == AttackState.Ready)
                 {
-                    animator.SetTriggerOneFrame(this, "StopDash");
+                    startedDash = false;
+                    //animator.SetTriggerOneFrame(this, "StopDash");
                 }
-                else if (newAttack.AttackState == AttackState.Starting)
+                else if (newAttack.AttackState == AttackState.Starting && startedDash == false)
                 {
-                    animator.SetTriggerOneFrame(this, "StartDash");
+                    Debug.Log("STARTING DASH");
+                    startedDash = true;
+                    //animator.SetTriggerXFrames(5, this, "StartDash");
                 }
             }
         }
@@ -104,7 +115,9 @@ public class ChampionController : ActorController
         animator.SetTriggerOneFrame(this, "CancelAttackAnimation");
         if (attack.AbilityInstanceId == championInstance.QAbilityInstanceId)
         {
-            animator.SetTriggerOneFrame(this, "StopDash");
+            Debug.Log("STOPPING DASH");
+            startedDash = false;
+            //animator.SetTriggerXFrames(5, this, "StopDash");
         }
     }
 }

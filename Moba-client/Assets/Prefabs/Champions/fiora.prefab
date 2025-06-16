@@ -2674,6 +2674,9 @@ MonoBehaviour:
   hitVfx:
     hitVfxPrefab: {fileID: 2343060853285553667, guid: 3ff4d70e2f466a14789b1171b05b4920, type: 3}
     timer: 1
+  qHitVfx:
+    hitVfxPrefab: {fileID: 5850631620888211483, guid: 079157571aa0d2a4197ad42bd2d990cb, type: 3}
+    timer: 0.5
   highlightMat: {fileID: 2100000, guid: 1e2817911072f304fa5f85be62dfd076, type: 2}
   selectMat: {fileID: 2100000, guid: bf36fbc27dda744438d3694f218083f2, type: 2}
   team: 0

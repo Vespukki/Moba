@@ -10,6 +10,7 @@ public static partial class Module
         public uint entity_id;
         public DbVector2 position;
         public DbVector2 last_position;
+        public bool busy; //for if you are in the middle of an ability
         
     }
 

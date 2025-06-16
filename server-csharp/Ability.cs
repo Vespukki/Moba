@@ -7,7 +7,8 @@ public static partial class Module
 {
     public const float FIORA_Q_CAST_RANGE = 100000f;
     public const float FIORA_Q_DASH_DIST = 400f;
-    public const float FIORA_Q_DASH_SPEED = 400f;
+    public const float FIORA_Q_DASH_SPEED = 1100f;
+    public const float FIORA_Q_BASE_CD = 3f;
 
    
 
@@ -45,6 +46,7 @@ public static partial class Module
     public static void FioraQ(ReducerContext ctx, Attacking attack, Ability ability, Entity entity, Actor actor, ActorBaseStats actorBaseStats)
     {
         Ability newAbility = ability;
+        Entity newEntity = entity;
 
         DbVector2 position = attack.target_position;
 
@@ -54,9 +56,13 @@ public static partial class Module
 
                 if (ability.ready_time < ctx.Timestamp)
                 {
+                    Actor newActor = actor;
+                    newActor.rotation = GetLookAtRotation(entity.position, position);
+    
                     Log.Info("FIORA Q USED");
 
-                    newAbility.ready_time = new(ctx.Timestamp.MicrosecondsSinceUnixEpoch + (long)(8f * 1_000_000f));
+                    newEntity.busy = true;
+                    newAbility.ready_time = new(ctx.Timestamp.MicrosecondsSinceUnixEpoch + (long)(FIORA_Q_BASE_CD * 1_000_000f));
 
                     Attacking newAttack = attack;
 
@@ -67,6 +73,9 @@ public static partial class Module
 
                     ctx.Db.attacking.ability_instance_id.Delete(ability.ability_instance_id);
                     ctx.Db.attacking.Insert(newAttack);
+
+                    ctx.Db.actor.entity_id.Delete(actor.entity_id);
+                    ctx.Db.actor.Insert(newActor);
 
                     goto case AttackState.Starting;
                 }
@@ -91,6 +100,30 @@ public static partial class Module
                     newPos = position;
                     ctx.Db.attacking.entity_id.Delete(entity.entity_id);
                     Log.Info("Made it to dash pos");
+
+                    // now do the hit part
+                    newEntity.busy = false;
+
+                    Actor targetActor = actor;
+                    foreach(var iterActor in ctx.Db.actor.Iter())
+                    {
+                        if (iterActor.entity_id != entity.entity_id)
+                        {
+                            targetActor = iterActor;
+                            break;
+                        }
+                    }
+
+                    if (targetActor.entity_id != actor.entity_id) //equivalent to null check
+                    {
+                        var nTargetStats = ctx.Db.actor_base_stats.actor_id.Find((uint)ActorId.Fiora);
+                        if (nTargetStats == null) return;
+
+                        HitActor(ctx, actor, targetActor, actorBaseStats, nTargetStats.Value, HitType.BasicAttack,
+                            CalculateBasicAttackDamage(ctx, actor, targetActor, actorBaseStats, nTargetStats.Value), ability);
+                    }
+                    
+
                 }
                 else
                 {
@@ -100,13 +133,9 @@ public static partial class Module
 
                 #endregion
 
-                Entity newEntity = entity;
                 newEntity.position = newPos;
                 newEntity.last_position = entity.position;
 
-
-                ctx.Db.entity.entity_id.Delete(entity.entity_id);
-                ctx.Db.entity.Insert(newEntity);
 
 
                 break;
@@ -115,6 +144,9 @@ public static partial class Module
             default:
                 break;
         }
+
+        ctx.Db.entity.entity_id.Delete(entity.entity_id);
+        ctx.Db.entity.Insert(newEntity);
 
         ctx.Db.ability.ability_instance_id.Delete(ability.ability_instance_id);
         ctx.Db.ability.Insert(newAbility);

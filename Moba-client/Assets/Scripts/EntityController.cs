@@ -27,6 +27,7 @@ public class EntityController : MonoBehaviour
     }
 
     public HitVFX hitVfx;
+    public HitVFX qHitVfx;
 
     protected virtual void Start()
     {

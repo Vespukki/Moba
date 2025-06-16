@@ -67,6 +67,7 @@ public static partial class Module
             entity_id = 0, //auto increments
             position = new(0,0),
             last_position = new(0,0),
+            busy = false
         });
 
         var player = ctx.Db.player.identity.Find(champ.player_identity);

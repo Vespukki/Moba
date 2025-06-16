@@ -32,6 +32,12 @@ public static partial class Module
     [Reducer]
     public static void SetTargetWalkPos(ReducerContext ctx, uint entityId, DbVector2 position, bool removeOtherActions = true)
     {
+        var nEntity = ctx.Db.entity.entity_id.Find(entityId);
+        if (nEntity == null) return;
+        Entity entity = nEntity.Value;
+
+        if (entity.busy) return;
+
         ctx.Db.set_walk_target_timer.entity_id.Delete(entityId);
 
         var nullableAttacking = ctx.Db.attacking.entity_id.Find(entityId);
@@ -79,18 +85,13 @@ public static partial class Module
     }
 
     [Reducer]
-    public static void MoveActor(ReducerContext ctx, Walking walker)
+    public static void MoveActor(ReducerContext ctx, Walking walker, Entity entity)
     {
+        Log.Info("bruh");
         float moveSpeed = 250; //Units per Second
 
         #region find entity and actor
-        var nullableEntity = ctx.Db.entity.entity_id.Find(walker.entity_id);
-        if (nullableEntity == null)
-        {
-            ctx.Db.walking.entity_id.Delete(walker.entity_id);
-            return;
-        }
-        Entity entity = nullableEntity.Value;
+        
 
         var nullableUnit = ctx.Db.actor.entity_id.Find(walker.entity_id);
         if (nullableUnit == null)
@@ -123,7 +124,9 @@ public static partial class Module
             newPos = new(entity.position.x + (direction.x * distanceToMove), entity.position.y + (direction.y * distanceToMove));
         }
 
+        Log.Info(direction.ToString());
         float finalRotation = DbVector2.RotationFromDirection(direction);
+        Log.Info(direction.ToString());
         #endregion
 
         #region update entity and actor
@@ -144,6 +147,7 @@ public static partial class Module
             entity_id = walker.entity_id,
             position = newPos,
             last_position = newLastPos,
+            busy = false //walking isnt a busy action
         });
         #endregion
     }
@@ -155,7 +159,17 @@ public static partial class Module
         var list = ctx.Db.walking.Iter();
         foreach (var walker in list)
         {
-            MoveActor(ctx, walker);
+            var nullableEntity = ctx.Db.entity.entity_id.Find(walker.entity_id);
+            if (nullableEntity == null)
+            {
+                Log.Info("null entity, skipping walk and deleting it");
+                ctx.Db.walking.entity_id.Delete(walker.entity_id);
+                continue;
+            }
+            Entity entity = nullableEntity.Value;
+
+            MoveActor(ctx, walker, entity);
+
         }
     }
 }

@@ -16,6 +16,8 @@ public static partial class Module
 
         [SpacetimeDB.Index.BTree]
         public uint source_entity_id;
+
+        public uint source_ability_id;
     }
 
     [Type]
@@ -59,6 +61,8 @@ public static partial class Module
         }
 
         Entity entity = nullableEntity.Value;
+
+        if (entity.busy) return;
 
         var nullableTargetEntity = ctx.Db.entity.entity_id.Find(targetEntityId);
 
@@ -110,6 +114,8 @@ public static partial class Module
         }
 
         Entity entity = nullableEntity.Value;
+
+        if (entity.busy) return;
 
         var nullableTargetEntity = ctx.Db.entity.entity_id.Find(targetEntityId);
 
@@ -171,7 +177,7 @@ public static partial class Module
     }
 
     [Reducer]
-    public static void HitActor(ReducerContext ctx, Actor actor, Actor targetActor, ActorBaseStats actorBaseStats, ActorBaseStats targetBaseStats, HitType hitType, float damage)
+    public static void HitActor(ReducerContext ctx, Actor actor, Actor targetActor, ActorBaseStats actorBaseStats, ActorBaseStats targetBaseStats, HitType hitType, float damage, Ability ability)
     {
         if (hitType == HitType.BasicAttack)
         {
@@ -192,7 +198,8 @@ public static partial class Module
         ctx.Db.registered_hits.Insert(new()
         {
             hit_entity_id = targetActor.entity_id,
-            source_entity_id = actor.entity_id
+            source_entity_id = actor.entity_id,
+            source_ability_id = (uint)ability.ability_id
         });
 
         Log.Info($"fixin to do {damage} damage to {targetActor.entity_id}");
@@ -267,7 +274,7 @@ public static partial class Module
                         ActorBaseStats targetBaseStats = nTargetBaseStats.Value;
 
                         HitActor(ctx, actor, targetActor, actorBaseStats, targetBaseStats, HitType.BasicAttack,
-                            CalculateBasicAttackDamage(ctx, actor, targetActor, actorBaseStats, targetBaseStats));
+                            CalculateBasicAttackDamage(ctx, actor, targetActor, actorBaseStats, targetBaseStats), ability);
 
                         Log.Info($"just did damage after {GetTimestampDifferenceInSeconds(actor.last_attack_time, ctx.Timestamp)} secs");
                         newActor.last_attack_time = ctx.Timestamp;
@@ -292,27 +299,10 @@ public static partial class Module
     }
 
     [Reducer]
-    public static void AttackWithActor(ReducerContext ctx, Attacking attack, Ability ability)
+    public static void AttackWithActor(ReducerContext ctx, Attacking attack, Ability ability, Entity entity, Actor actor)
     {
 
         #region find entity and actor
-        var nullableEntity = ctx.Db.entity.entity_id.Find(attack.entity_id);
-        if (nullableEntity == null)
-        {
-            Log.Info($"deleting attacker because entity is null");
-            ctx.Db.attacking.entity_id.Delete(attack.entity_id);
-            return;
-        }
-        Entity entity = nullableEntity.Value;
-
-        var nullableUnit = ctx.Db.actor.entity_id.Find(attack.entity_id);
-        if (nullableUnit == null)
-        {
-            ctx.Db.attacking.entity_id.Delete(attack.entity_id);
-            return;
-        }
-        Actor actor = nullableUnit.Value;
-
        
 
         var nBaseStats = ctx.Db.actor_base_stats.actor_id.Find(actor.actor_id);
@@ -347,16 +337,38 @@ public static partial class Module
     public static void MakeAllAttacks(ReducerContext ctx)
     {
         var list = ctx.Db.attacking.Iter();
-        foreach (var attacker in list)
+        foreach (var attack in list)
         {
-            var nAbility = ctx.Db.ability.ability_instance_id.Find(attacker.ability_instance_id);
+            var nullableEntity = ctx.Db.entity.entity_id.Find(attack.entity_id);
+            if (nullableEntity == null)
+            {
+                Log.Info($"deleting attacker because entity is null");
+                ctx.Db.attacking.entity_id.Delete(attack.entity_id);
+                return;
+            }
+            Entity entity = nullableEntity.Value;
+
+
+            var nAbility = ctx.Db.ability.ability_instance_id.Find(attack.ability_instance_id);
             if (nAbility == null)
             {
                 Log.Info("null ability");
                 continue;
             }
 
-            AttackWithActor(ctx, attacker, nAbility.Value);
+            
+
+            var nullableUnit = ctx.Db.actor.entity_id.Find(attack.entity_id);
+            if (nullableUnit == null)
+            {
+                ctx.Db.attacking.entity_id.Delete(attack.entity_id);
+                return;
+            }
+            Actor actor = nullableUnit.Value;
+
+
+
+            AttackWithActor(ctx, attack, nAbility.Value, entity, actor);
         }
 
     }
