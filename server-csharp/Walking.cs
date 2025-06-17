@@ -23,6 +23,68 @@ public static partial class Module
         public bool remove_other_actions;
     }
 
+    [Table(Name = "nav_mesh_vertex", Public = true)]
+    public partial struct NavMeshVertex
+    {
+        [PrimaryKey, AutoInc]
+        public uint vertex_id;
+
+        public DbVector2 position;
+    }
+
+    [Table(Name = "nav_mesh_edge", Public = true)]
+    public partial struct NavMeshEdge
+    {
+        [PrimaryKey, AutoInc]
+        public uint edge_id;
+
+        public uint from_vertex_id;
+        public uint to_vertex_id;
+    }
+
+
+    [Table(Name = "path", Public = true)]
+    public partial struct Path
+    {
+        [PrimaryKey, AutoInc]
+        public uint path_id;
+
+        [SpacetimeDB.Index.BTree]
+        public uint entity_id;
+
+        public DbVector2 position;
+
+        public uint order;
+    }
+
+    /// <summary>
+    /// Creates path from entities position to the given position
+    /// </summary>
+    [Reducer]
+    public static void CreatePath(ReducerContext ctx, Entity entity, DbVector2 position)
+    {
+        Path newPath = new()
+        {
+            entity_id = entity.entity_id,
+            order = 0,
+            path_id = 0,
+            position = new(position.x, entity.position.y)
+
+        };
+
+        Path newPath2 = new()
+        {
+            entity_id = entity.entity_id,
+            order = 1,
+            path_id = 0,
+            position = position,
+
+        };
+
+        ctx.Db.path.Insert(newPath);
+        ctx.Db.path.Insert(newPath2);
+    }
+
     [Reducer]
     public static void SetFutureTargetWalkPos(ReducerContext ctx, SetWalkTargetTimer caller)
     {
@@ -37,6 +99,9 @@ public static partial class Module
         Entity entity = nEntity.Value;
 
         if (entity.busy) return;
+
+        ctx.Db.path.entity_id.Delete(entity.entity_id); // THIS PART IS TEMP
+        CreatePath(ctx, entity, position);
 
         ctx.Db.set_walk_target_timer.entity_id.Delete(entityId);
 
@@ -91,19 +156,27 @@ public static partial class Module
         float moveSpeed = 250; //Units per Second
 
         #region find entity and actor
+
         
 
-        var nullableUnit = ctx.Db.actor.entity_id.Find(walker.entity_id);
+        List<Path> paths = ctx.Db.path.entity_id.Filter(entity.entity_id).ToList();
+        if (paths.Count == 0) return;
+
+        paths.Sort((a, b) => a.order.CompareTo(b.order));
+
+        Log.Info(paths.Count.ToString());
+
+        var nullableUnit = ctx.Db.actor.entity_id.Find(entity.entity_id);
         if (nullableUnit == null)
         {
-            ctx.Db.walking.entity_id.Delete(walker.entity_id);
+            ctx.Db.walking.entity_id.Delete(entity.entity_id);
             return;
         }
         Actor actor = nullableUnit.Value;
         #endregion
 
         #region movement math
-        var difference = walker.target_walk_pos - entity.position;
+        var difference = paths[0].position - entity.position;
 
         float distance = difference.Magnitude();
 
@@ -116,8 +189,16 @@ public static partial class Module
         DbVector2 newPos;
         if (distance <= distanceToMove)
         {
-            newPos = walker.target_walk_pos;
-            ctx.Db.walking.entity_id.Delete(walker.entity_id);
+            newPos = paths[0].position;
+            if (paths.Count - 1 <= 0)
+            {
+                ctx.Db.walking.entity_id.Delete(entity.entity_id);
+            }
+            else
+            {
+                //target next point
+                ctx.Db.path.path_id.Delete(paths[0].path_id);
+            }
         }
         else
         {
@@ -135,16 +216,16 @@ public static partial class Module
 
         newActor.rotation = finalRotation;
 
-        ctx.Db.actor.entity_id.Delete(walker.entity_id);
+        ctx.Db.actor.entity_id.Delete(entity.entity_id);
         ctx.Db.actor.Insert(newActor);
 
 
         DbVector2 newLastPos = entity.position;
 
-        ctx.Db.entity.entity_id.Delete(walker.entity_id);
+        ctx.Db.entity.entity_id.Delete(entity.entity_id);
         ctx.Db.entity.Insert(new Entity()
         {
-            entity_id = walker.entity_id,
+            entity_id = entity.entity_id,
             position = newPos,
             last_position = newLastPos,
             busy = false //walking isnt a busy action
