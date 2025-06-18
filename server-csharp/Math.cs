@@ -48,12 +48,27 @@ public partial struct DbVector2
         return new DbVector2(a.x - b.x, a.y - b.y);
     }
 
+    public static DbVector2 operator *(DbVector2 a, float b)
+    {
+        return new DbVector2(a.x * b, a.y * b);
+    }
+    public static DbVector2 operator /(DbVector2 a, float b)
+    {
+        return new DbVector2(a.x / b, a.y / b);
+    }
+
     // Returns the Euclidean distance between two points
     public static float Distance(DbVector2 a, DbVector2 b)
     {
         float dx = a.x - b.x;
         float dy = a.y - b.y;
         return (float)Math.Sqrt(dx * dx + dy * dy);
+    }
+
+    // Calculates the dot product of two vectors
+    public static float Dot(DbVector2 a, DbVector2 b)
+    {
+        return a.x * b.x + a.y * b.y;
     }
 
     public static float RotationFromDirection(DbVector2 direction)

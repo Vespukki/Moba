@@ -42,6 +42,182 @@ public static partial class Module
         public uint to_vertex_id = to_id;
     }
 
+    [Table(Name = "nav_mesh_polygon", Public = true)]
+    public partial struct NavMeshPolygon(List<uint> vertex_ids, DbVector2 centroid)
+    {
+        [PrimaryKey, AutoInc]
+        public uint polygon_id;
+
+        // Let's store a list of vertex ids that define the polygon
+        public List<uint> vertex_ids = vertex_ids;
+
+        // Optionally precompute centroid
+        public DbVector2 centroid = centroid;
+    }
+
+    [Table(Name = "nav_mesh_polygon_edge", Public = true)]
+    public partial struct NavMeshPolygonEdge
+    {
+        [PrimaryKey, AutoInc]
+        public uint edge_id;
+
+        public uint from_polygon_id;
+        public uint to_polygon_id;
+
+        // The shared edge points
+        public DbVector2 shared_vertex_a;
+        public DbVector2 shared_vertex_b;
+    }
+
+    public static NavMeshPolygon FindNearestPolygon(ReducerContext ctx, DbVector2 position)
+    {
+        NavMeshPolygon nearestPolygon = default;
+        float closestDistance = float.MaxValue;
+
+        foreach (var polygon in ctx.Db.nav_mesh_polygon.Iter())
+        {
+            if (PointInPolygon(ctx, polygon, position))
+                return polygon; // Best case: inside polygon.
+
+            float distance = (polygon.centroid - position).Magnitude();
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                nearestPolygon = polygon;
+            }
+        }
+
+        return nearestPolygon;
+    }
+
+    public static List<DbVector2> AStarPolygon(ReducerContext ctx, uint startPolygonId, uint goalPolygonId)
+    {
+        var openSet = new PriorityQueue<uint, float>();
+        openSet.Enqueue(startPolygonId, 0f);
+
+        var cameFrom = new Dictionary<uint, uint>();
+        var gScore = new Dictionary<uint, float> { [startPolygonId] = 0f };
+        var fScore = new Dictionary<uint, float> { [startPolygonId] = HeuristicPolygon(ctx, startPolygonId, goalPolygonId) };
+
+        // Store edge transitions
+        var edgeTransitions = new Dictionary<uint, NavMeshPolygonEdge>();
+
+        while (openSet.Count > 0)
+        {
+            uint current = openSet.Dequeue();
+
+            if (current == goalPolygonId)
+                return ReconstructPathPolygon(ctx, cameFrom, edgeTransitions, current);
+
+            foreach (var edge in ctx.Db.nav_mesh_polygon_edge.Iter()
+                     .Where(e => e.from_polygon_id == current || e.to_polygon_id == current))
+            {
+                uint neighbor = edge.from_polygon_id == current ? edge.to_polygon_id : edge.from_polygon_id;
+
+                // Calculate actual edge midpoint as transition cost
+                float edgeLength = (edge.shared_vertex_a - edge.shared_vertex_b).Magnitude();
+                float tentativeGScore = gScore[current] + edgeLength;
+
+                if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor])
+                {
+                    cameFrom[neighbor] = current;
+                    edgeTransitions[neighbor] = edge;
+                    gScore[neighbor] = tentativeGScore;
+                    fScore[neighbor] = tentativeGScore + HeuristicPolygon(ctx, neighbor, goalPolygonId);
+
+                    if (!openSet.UnorderedItems.Any(item => item.Element == neighbor))
+                        openSet.Enqueue(neighbor, fScore[neighbor]);
+                }
+            }
+        }
+
+        return new List<DbVector2>();
+    }
+
+    public static List<DbVector2> ReconstructPathPolygon(
+    ReducerContext ctx,
+    Dictionary<uint, uint> cameFrom,
+    Dictionary<uint, NavMeshPolygonEdge> edgeTransitions,
+    uint current)
+    {
+        var path = new List<DbVector2>();
+        var polygonPath = new Stack<uint>();
+
+        // Reconstruct polygon path
+        while (cameFrom.ContainsKey(current))
+        {
+            polygonPath.Push(current);
+            current = cameFrom[current];
+        }
+        polygonPath.Push(current);
+
+        // Convert polygon path to edge points
+        if (polygonPath.Count > 1)
+        {
+            uint prevPoly = polygonPath.Pop();
+            while (polygonPath.Count > 0)
+            {
+                uint nextPoly = polygonPath.Pop();
+                var edge = edgeTransitions[nextPoly];
+
+                // Use the midpoint of the shared edge
+                var edgeMid = (edge.shared_vertex_a + edge.shared_vertex_b) * 0.5f;
+                path.Add(edgeMid);
+
+                prevPoly = nextPoly;
+            }
+        }
+
+        return path;
+    }
+
+    public static bool PointInPolygon(ReducerContext ctx, NavMeshPolygon polygon, DbVector2 point)
+    {
+        var vertices = polygon.vertex_ids.Select(id => ctx.Db.nav_mesh_vertex.vertex_id.Find(id).Value.position).ToList();
+
+        int crossings = 0;
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            var a = vertices[i];
+            var b = vertices[(i + 1) % vertices.Count];
+
+            if (((a.y > point.y) != (b.y > point.y)) &&
+                (point.x < (b.x - a.x) * (point.y - a.y) / (b.y - a.y + float.Epsilon) + a.x))
+            {
+                crossings++;
+            }
+        }
+        return (crossings % 2) == 1;
+    }
+
+
+    public static float HeuristicPolygon(ReducerContext ctx, uint fromPolygonId, uint toPolygonId)
+    {
+        var fromPoly = ctx.Db.nav_mesh_polygon.polygon_id.Find(fromPolygonId);
+        var toPoly = ctx.Db.nav_mesh_polygon.polygon_id.Find(toPolygonId);
+
+        if (fromPoly == null || toPoly == null)
+            return 0;
+
+        // Find the closest pair of edges between polygons
+        float minDist = float.MaxValue;
+
+        foreach (var edge in ctx.Db.nav_mesh_polygon_edge.Iter()
+                 .Where(e => (e.from_polygon_id == fromPolygonId && e.to_polygon_id == toPolygonId) ||
+                             (e.from_polygon_id == toPolygonId && e.to_polygon_id == fromPolygonId)))
+        {
+            var edgeCenter = (edge.shared_vertex_a + edge.shared_vertex_b) * 0.5f;
+            float dist = (fromPoly.Value.centroid - edgeCenter).Magnitude() +
+                         (toPoly.Value.centroid - edgeCenter).Magnitude();
+
+            if (dist < minDist)
+                minDist = dist;
+        }
+
+        return minDist;
+    }
+
+
 
     [Table(Name = "path", Public = true)]
     public partial struct Path
@@ -63,24 +239,77 @@ public static partial class Module
     [Reducer]
     public static void CreatePath(ReducerContext ctx, Entity entity, DbVector2 position)
     {
-        var startNode = FindNearestNode(ctx, entity.position);
-        var endNode = FindNearestNode(ctx, position);
+        var startPoly = FindNearestPolygon(ctx, entity.position);
+        var endPoly = FindNearestPolygon(ctx, position);
 
-        var finalList = AStar(ctx, startNode.vertex_id, endNode.vertex_id);
+        var edgePath = AStarPolygon(ctx, startPoly.polygon_id, endPoly.polygon_id);
 
-        uint orderCount = 0;
+        List<DbVector2> finalPath = new();
 
-        foreach (var pos in finalList)
+        // Add start position
+        finalPath.Add(entity.position);
+
+      
+        // Add all edge points
+        finalPath.AddRange(edgePath);
+
+
+        // Add final position
+        finalPath.Add(position);
+
+        // Clear old path and insert new one
+        ctx.Db.path.entity_id.Delete(entity.entity_id);
+
+        for (int i = 0; i < finalPath.Count; i++)
         {
-            ctx.Db.path.Insert(new()
+            ctx.Db.path.Insert(new Path
             {
                 entity_id = entity.entity_id,
-                position = pos,
-                order = orderCount,
+                position = finalPath[i],
+                order = (uint)i
             });
-
-            orderCount++;
         }
+    }
+
+    private static DbVector2 GetClosestEdgePoint(ReducerContext ctx, NavMeshPolygon poly, DbVector2 point)
+    {
+        var vertices = poly.vertex_ids
+            .Select(id => ctx.Db.nav_mesh_vertex.vertex_id.Find(id).Value.position)
+            .ToList();
+
+        DbVector2 closestPoint = default;
+        float closestDistance = float.MaxValue;
+
+        // Check each edge of the polygon
+        for (int i = 0; i < vertices.Count; i++)
+        {
+            var a = vertices[i];
+            var b = vertices[(i + 1) % vertices.Count];
+
+            var edgePoint = GetClosestPointOnLine(a, b, point);
+            float dist = (edgePoint - point).Magnitude();
+
+            if (dist < closestDistance)
+            {
+                closestDistance = dist;
+                closestPoint = edgePoint;
+            }
+        }
+
+        return closestPoint;
+    }
+
+    private static DbVector2 GetClosestPointOnLine(DbVector2 lineA, DbVector2 lineB, DbVector2 point)
+    {
+        var lineVec = lineB - lineA;
+        var pointVec = point - lineA;
+        float lineLength = lineVec.Magnitude();
+        var lineUnit = lineVec / lineLength;
+
+        float projection = DbVector2.Dot(pointVec, lineUnit);
+        projection = Math.Clamp(projection, 0f, lineLength);
+
+        return lineA + lineUnit * projection;
     }
 
     [Reducer]
@@ -266,126 +495,129 @@ public static partial class Module
         return nearestNode;
     }
 
-    public static float Heuristic(ReducerContext ctx, uint fromVertexId, uint toVertexId)
-    {
-        var nFromNode = ctx.Db.nav_mesh_vertex.vertex_id.Find(fromVertexId);
-        var nToNode = ctx.Db.nav_mesh_vertex.vertex_id.Find(toVertexId);
-
-        if (nFromNode == null || nToNode == null)
-        {
-            return 0;
-        }
-        NavMeshVertex fromNode = nFromNode.Value;
-        NavMeshVertex toNode = nToNode.Value;
-
-        return (fromNode.position - toNode.position).Magnitude();
-    }
-
-    public static List<DbVector2> ReconstructPath(ReducerContext ctx, Dictionary<uint, uint> cameFrom, uint current)
-    {
-        var totalPath = new List<DbVector2>();
-
-        while (cameFrom.ContainsKey(current))
-        {
-            var node = ctx.Db.nav_mesh_vertex.vertex_id.Find(current);
-            current = cameFrom[current];
-            if (node == null)
-            {
-                continue;
-            }
-            totalPath.Add(node.Value.position);
-           
-        }
-
-        // Add start node
-        var startNode = ctx.Db.nav_mesh_vertex.vertex_id.Find(current);
-        if (startNode != null)
-        {
-            totalPath.Add(startNode.Value.position);
-        }
-
-
-        totalPath.Reverse(); // Path is from goal to start, so reverse it
-        foreach (var node in totalPath)
-        {
-            Log.Info(node.ToString());
-        }
-        return totalPath;
-    }
-
-    public static List<DbVector2> AStar(ReducerContext ctx, uint startVertexId, uint goalVertexId)
-    {
-        // Open set: nodes to explore, sorted by fScore
-        var openSet = new PriorityQueue<uint, float>();
-        openSet.Enqueue(startVertexId, 0f);
-
-        // CameFrom: tracks how we got to each node
-        var cameFrom = new Dictionary<uint, uint>();
-
-        // gScore: cost from start to current node
-        var gScore = new Dictionary<uint, float>
-        {
-            [startVertexId] = 0f
-        };
-
-        // fScore: estimated total cost (gScore + heuristic)
-        var fScore = new Dictionary<uint, float>
-        {   
-            [startVertexId] = Heuristic(ctx, startVertexId, goalVertexId)
-        };
-
-        while (openSet.Count > 0)
-        {
-            uint current = openSet.Dequeue();
-
-            if (current == goalVertexId)
-                return ReconstructPath(ctx, cameFrom, current);
-
-            foreach (var edge in ctx.Db.nav_mesh_edge.Iter().Where(e => e.from_vertex_id == current))
-            {
-                uint neighbor = edge.to_vertex_id;
-                float tentativeGScore = gScore[current] + 1; //Assume all edges cost 1 for now
-
-                if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor])
-                {
-                    cameFrom[neighbor] = current;
-                    gScore[neighbor] = tentativeGScore;
-
-                    float estimatedFScore = tentativeGScore + Heuristic(ctx, neighbor, goalVertexId);
-                    fScore[neighbor] = estimatedFScore;
-
-                    // If neighbor is not in the queue, add it
-                    if (!openSet.UnorderedItems.Any(item => item.Element == neighbor))
-                        openSet.Enqueue(neighbor, estimatedFScore);
-                }
-            }
-        }
-
-        // No path found
-        return new List<DbVector2>();
-    }
-
     [Reducer]
     public static void GenerateNavmesh(ReducerContext ctx)
     {
-        NavMeshVertex v1 = new(new(700, 700));
-        NavMeshVertex v2 = new(new(700, -700));
-        NavMeshVertex v3 = new(new(-700, -700));
-        NavMeshVertex v4 = new(new(-700, 700));
+        // Define vertices for our U-shape (3 rectangles forming a U)
+        // Left vertical rectangle
+        NavMeshVertex v1 = new(new(-700, 700));   // Top-left
+        NavMeshVertex v2 = new(new(-700, -700));  // Bottom-left
+        NavMeshVertex v3 = new(new(-200, -700));  // Bottom-right
+        NavMeshVertex v4 = new(new(-200, 700));   // Top-right
 
+        // Bottom horizontal rectangle
+        NavMeshVertex v5 = new(new(-200, -200));  // Top-left
+        NavMeshVertex v6 = new(new(200, -700));   // Bottom-right
+        NavMeshVertex v7 = new(new(200, -200));   // Top-right
+        //and uses v3
+
+        // Right vertical rectangle
+        NavMeshVertex v8 = new(new(200, 700));    // Top-left
+        NavMeshVertex v9 = new(new(700, -700));  // Bottom-right
+        NavMeshVertex v10 = new(new(700, 700));   // Top-right
+        //and uses v6
+
+        // Insert all vertices
         v1 = ctx.Db.nav_mesh_vertex.Insert(v1);
         v2 = ctx.Db.nav_mesh_vertex.Insert(v2);
         v3 = ctx.Db.nav_mesh_vertex.Insert(v3);
         v4 = ctx.Db.nav_mesh_vertex.Insert(v4);
+        
+        v5 = ctx.Db.nav_mesh_vertex.Insert(v5);
+        v6 = ctx.Db.nav_mesh_vertex.Insert(v6);
+        v7 = ctx.Db.nav_mesh_vertex.Insert(v7);
 
-        NavMeshEdge e1 = new(v1.vertex_id, v2.vertex_id);
-        NavMeshEdge e2 = new(v2.vertex_id, v3.vertex_id);
-        NavMeshEdge e3 = new(v3.vertex_id, v4.vertex_id);
-        NavMeshEdge e4 = new(v4.vertex_id, v1.vertex_id);
+        v8 = ctx.Db.nav_mesh_vertex.Insert(v8);
+        v9 = ctx.Db.nav_mesh_vertex.Insert(v9);
+        v10 = ctx.Db.nav_mesh_vertex.Insert(v10);
 
-        ctx.Db.nav_mesh_edge.Insert(e1);
-        ctx.Db.nav_mesh_edge.Insert(e2);
-        ctx.Db.nav_mesh_edge.Insert(e3);
-        ctx.Db.nav_mesh_edge.Insert(e4);
+        // Create polygons with their vertices and centroids
+        // Left vertical rectangle
+        var leftVertices = new List<uint> { v1.vertex_id, v2.vertex_id, v3.vertex_id, v4.vertex_id };
+        var leftCentroid = CalculateCentroid(new List<DbVector2> { v1.position, v2.position, v3.position, v4.position });
+        var leftPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(leftVertices, leftCentroid));
+
+        // Bottom horizontal rectangle
+        var bottomVertices = new List<uint> { v5.vertex_id, v3.vertex_id, v6.vertex_id, v7.vertex_id };
+        var bottomCentroid = CalculateCentroid(new List<DbVector2> { v5.position, v3.position, v6.position, v7.position });
+        var bottomPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(bottomVertices, bottomCentroid));
+
+        // Right vertical rectangle
+        var rightVertices = new List<uint> { v8.vertex_id, v6.vertex_id, v9.vertex_id, v10.vertex_id };
+        var rightCentroid = CalculateCentroid(new List<DbVector2> { v8.position, v6.position, v9.position, v10.position });
+        var rightPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(rightVertices, rightCentroid));
+
+        // Create connections between polygons
+        // Left connects to Bottom
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = leftPoly.polygon_id,
+            to_polygon_id = bottomPoly.polygon_id,
+            shared_vertex_a = v3.position,  // Bottom-right of left rectangle
+            shared_vertex_b = v5.position   // Bottom-left of bottom rectangle
+        });
+
+        // Bottom connects to Right
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = bottomPoly.polygon_id,
+            to_polygon_id = rightPoly.polygon_id,
+            shared_vertex_a = v6.position,  // Bottom-right of bottom rectangle
+            shared_vertex_b = v7.position  // Bottom-left of right rectangle
+        });
+
+        // Create reverse connections for bidirectional movement
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = bottomPoly.polygon_id,
+            to_polygon_id = leftPoly.polygon_id,
+            shared_vertex_a = v3.position,
+            shared_vertex_b = v5.position
+        });
+
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = rightPoly.polygon_id,
+            to_polygon_id = bottomPoly.polygon_id,
+            shared_vertex_a = v6.position,
+            shared_vertex_b = v7.position
+        });
     }
+
+    public static DbVector2 CalculateCentroid(List<DbVector2> vertices)
+    {
+        float signedArea = 0;
+        float centroidX = 0;
+        float centroidY = 0;
+
+        int count = vertices.Count;
+
+        for (int i = 0; i < count; i++)
+        {
+            var current = vertices[i];
+            var next = vertices[(i + 1) % count];
+
+            float a = (current.x * next.y) - (next.x * current.y);
+            signedArea += a;
+
+            centroidX += (current.x + next.x) * a;
+            centroidY += (current.y + next.y) * a;
+        }
+
+        signedArea *= 0.5f;
+
+        if (Math.Abs(signedArea) < float.Epsilon)
+        {
+            // Fallback: degenerate polygon, just average the points
+            float avgX = vertices.Sum(v => v.x) / count;
+            float avgY = vertices.Sum(v => v.y) / count;
+            return new DbVector2(avgX, avgY);
+        }
+
+        centroidX /= (6 * signedArea);
+        centroidY /= (6 * signedArea);
+
+        return new DbVector2(centroidX, centroidY);
+    }
+
 }

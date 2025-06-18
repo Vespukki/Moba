@@ -96,12 +96,20 @@ public class GameManager : MonoBehaviour
         conn.Db.NavMeshVertex.OnInsert += NavmeshVertexOnInsert;
 
         conn.Db.NavMeshEdge.OnInsert += NavmeshEdgeOnInsert;
+
+        conn.Db.NavMeshPolygon.OnInsert += NavmeshPolygonOnInsert;
+
         OnConnected?.Invoke();
 
         // Request all tables
         Conn.SubscriptionBuilder()
             .OnApplied(HandleSubscriptionApplied)
             .SubscribeToAllTables();
+    }
+
+    private void NavmeshPolygonOnInsert(EventContext context, NavMeshPolygon row)
+    {
+        NavmeshVisualizer.polygons.Add(row.PolygonId, row);
     }
 
     private void NavmeshEdgeOnInsert(EventContext context, NavMeshEdge row)
@@ -423,6 +431,7 @@ public class GameManager : MonoBehaviour
 
     private void WalkingOnInsert(EventContext ctx, Walking row)
     {
+        Debug.Log("walking insert");
         if (championControllers.TryGetValue(row.EntityId, out ChampionController champController))
         {
             champController.UpdateWalker(row);
