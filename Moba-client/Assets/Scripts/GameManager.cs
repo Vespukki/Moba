@@ -93,14 +93,25 @@ public class GameManager : MonoBehaviour
         conn.Db.Ability.OnInsert += AbilityOnInsert;
         conn.Db.Ability.OnUpdate += AbilityOnUpdate;
 
+        conn.Db.NavMeshVertex.OnInsert += NavmeshVertexOnInsert;
 
-
+        conn.Db.NavMeshEdge.OnInsert += NavmeshEdgeOnInsert;
         OnConnected?.Invoke();
 
         // Request all tables
         Conn.SubscriptionBuilder()
             .OnApplied(HandleSubscriptionApplied)
             .SubscribeToAllTables();
+    }
+
+    private void NavmeshEdgeOnInsert(EventContext context, NavMeshEdge row)
+    {
+        NavmeshVisualizer.edges.Add(row.EdgeId, row);
+    }
+
+    private void NavmeshVertexOnInsert(EventContext context, NavMeshVertex row)
+    {
+        NavmeshVisualizer.vertices.Add(row.VertexId, row);
     }
 
     private void AbilityOnUpdate(EventContext context, Ability oldRow, Ability newRow)

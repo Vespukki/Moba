@@ -24,22 +24,22 @@ public static partial class Module
     }
 
     [Table(Name = "nav_mesh_vertex", Public = true)]
-    public partial struct NavMeshVertex
+    public partial struct NavMeshVertex(DbVector2 position)
     {
         [PrimaryKey, AutoInc]
         public uint vertex_id;
 
-        public DbVector2 position;
+        public DbVector2 position = position;
     }
 
     [Table(Name = "nav_mesh_edge", Public = true)]
-    public partial struct NavMeshEdge
+    public partial struct NavMeshEdge(uint from_id, uint to_id)
     {
         [PrimaryKey, AutoInc]
         public uint edge_id;
 
-        public uint from_vertex_id;
-        public uint to_vertex_id;
+        public uint from_vertex_id = from_id;
+        public uint to_vertex_id = to_id;
     }
 
 
@@ -63,26 +63,24 @@ public static partial class Module
     [Reducer]
     public static void CreatePath(ReducerContext ctx, Entity entity, DbVector2 position)
     {
-        Path newPath = new()
+        var startNode = FindNearestNode(ctx, entity.position);
+        var endNode = FindNearestNode(ctx, position);
+
+        var finalList = AStar(ctx, startNode.vertex_id, endNode.vertex_id);
+
+        uint orderCount = 0;
+
+        foreach (var pos in finalList)
         {
-            entity_id = entity.entity_id,
-            order = 0,
-            path_id = 0,
-            position = new(position.x, entity.position.y)
+            ctx.Db.path.Insert(new()
+            {
+                entity_id = entity.entity_id,
+                position = pos,
+                order = orderCount,
+            });
 
-        };
-
-        Path newPath2 = new()
-        {
-            entity_id = entity.entity_id,
-            order = 1,
-            path_id = 0,
-            position = position,
-
-        };
-
-        ctx.Db.path.Insert(newPath);
-        ctx.Db.path.Insert(newPath2);
+            orderCount++;
+        }
     }
 
     [Reducer]
@@ -152,7 +150,6 @@ public static partial class Module
     [Reducer]
     public static void MoveActor(ReducerContext ctx, Walking walker, Entity entity)
     {
-        Log.Info("bruh");
         float moveSpeed = 250; //Units per Second
 
         #region find entity and actor
@@ -164,7 +161,6 @@ public static partial class Module
 
         paths.Sort((a, b) => a.order.CompareTo(b.order));
 
-        Log.Info(paths.Count.ToString());
 
         var nullableUnit = ctx.Db.actor.entity_id.Find(entity.entity_id);
         if (nullableUnit == null)
@@ -205,9 +201,7 @@ public static partial class Module
             newPos = new(entity.position.x + (direction.x * distanceToMove), entity.position.y + (direction.y * distanceToMove));
         }
 
-        Log.Info(direction.ToString());
         float finalRotation = DbVector2.RotationFromDirection(direction);
-        Log.Info(direction.ToString());
         #endregion
 
         #region update entity and actor
@@ -252,5 +246,146 @@ public static partial class Module
             MoveActor(ctx, walker, entity);
 
         }
+    }
+
+    public static NavMeshVertex FindNearestNode(ReducerContext ctx, DbVector2 position)
+    {
+        NavMeshVertex nearestNode = default;
+        float closestDistance = float.MaxValue;
+
+        foreach (var node in ctx.Db.nav_mesh_vertex.Iter())
+        {
+            float distance = (node.position - position).Magnitude();
+            if (distance < closestDistance)
+            {
+                closestDistance = distance;
+                nearestNode = node;
+            }
+        }
+
+        return nearestNode;
+    }
+
+    public static float Heuristic(ReducerContext ctx, uint fromVertexId, uint toVertexId)
+    {
+        var nFromNode = ctx.Db.nav_mesh_vertex.vertex_id.Find(fromVertexId);
+        var nToNode = ctx.Db.nav_mesh_vertex.vertex_id.Find(toVertexId);
+
+        if (nFromNode == null || nToNode == null)
+        {
+            return 0;
+        }
+        NavMeshVertex fromNode = nFromNode.Value;
+        NavMeshVertex toNode = nToNode.Value;
+
+        return (fromNode.position - toNode.position).Magnitude();
+    }
+
+    public static List<DbVector2> ReconstructPath(ReducerContext ctx, Dictionary<uint, uint> cameFrom, uint current)
+    {
+        var totalPath = new List<DbVector2>();
+
+        while (cameFrom.ContainsKey(current))
+        {
+            var node = ctx.Db.nav_mesh_vertex.vertex_id.Find(current);
+            current = cameFrom[current];
+            if (node == null)
+            {
+                continue;
+            }
+            totalPath.Add(node.Value.position);
+           
+        }
+
+        // Add start node
+        var startNode = ctx.Db.nav_mesh_vertex.vertex_id.Find(current);
+        if (startNode != null)
+        {
+            totalPath.Add(startNode.Value.position);
+        }
+
+
+        totalPath.Reverse(); // Path is from goal to start, so reverse it
+        foreach (var node in totalPath)
+        {
+            Log.Info(node.ToString());
+        }
+        return totalPath;
+    }
+
+    public static List<DbVector2> AStar(ReducerContext ctx, uint startVertexId, uint goalVertexId)
+    {
+        // Open set: nodes to explore, sorted by fScore
+        var openSet = new PriorityQueue<uint, float>();
+        openSet.Enqueue(startVertexId, 0f);
+
+        // CameFrom: tracks how we got to each node
+        var cameFrom = new Dictionary<uint, uint>();
+
+        // gScore: cost from start to current node
+        var gScore = new Dictionary<uint, float>
+        {
+            [startVertexId] = 0f
+        };
+
+        // fScore: estimated total cost (gScore + heuristic)
+        var fScore = new Dictionary<uint, float>
+        {   
+            [startVertexId] = Heuristic(ctx, startVertexId, goalVertexId)
+        };
+
+        while (openSet.Count > 0)
+        {
+            uint current = openSet.Dequeue();
+
+            if (current == goalVertexId)
+                return ReconstructPath(ctx, cameFrom, current);
+
+            foreach (var edge in ctx.Db.nav_mesh_edge.Iter().Where(e => e.from_vertex_id == current))
+            {
+                uint neighbor = edge.to_vertex_id;
+                float tentativeGScore = gScore[current] + 1; //Assume all edges cost 1 for now
+
+                if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor])
+                {
+                    cameFrom[neighbor] = current;
+                    gScore[neighbor] = tentativeGScore;
+
+                    float estimatedFScore = tentativeGScore + Heuristic(ctx, neighbor, goalVertexId);
+                    fScore[neighbor] = estimatedFScore;
+
+                    // If neighbor is not in the queue, add it
+                    if (!openSet.UnorderedItems.Any(item => item.Element == neighbor))
+                        openSet.Enqueue(neighbor, estimatedFScore);
+                }
+            }
+        }
+
+        // No path found
+        return new List<DbVector2>();
+    }
+
+    [Reducer]
+    public static void GenerateNavmesh(ReducerContext ctx)
+    {
+        NavMeshVertex v1 = new(new(700, 700));
+        NavMeshVertex v2 = new(new(700, -700));
+        NavMeshVertex v3 = new(new(-700, -700));
+        NavMeshVertex v4 = new(new(-700, 700));
+
+        v1 = ctx.Db.nav_mesh_vertex.Insert(v1);
+        v2 = ctx.Db.nav_mesh_vertex.Insert(v2);
+        v3 = ctx.Db.nav_mesh_vertex.Insert(v3);
+        v4 = ctx.Db.nav_mesh_vertex.Insert(v4);
+
+        NavMeshEdge e1 = new(v1.vertex_id, v2.vertex_id);
+        NavMeshEdge e2 = new(v2.vertex_id, v3.vertex_id);
+        NavMeshEdge e3 = new(v3.vertex_id, v4.vertex_id);
+        NavMeshEdge e4 = new(v4.vertex_id, v1.vertex_id);
+
+        ctx.Db.nav_mesh_edge.Insert(e1);
+        ctx.Db.nav_mesh_edge.Insert(e2);
+        ctx.Db.nav_mesh_edge.Insert(e3);
+        ctx.Db.nav_mesh_edge.Insert(e4);
     }
 }
