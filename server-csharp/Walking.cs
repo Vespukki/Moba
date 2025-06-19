@@ -308,7 +308,16 @@ public static partial class Module
         var startPoly = FindNearestPolygon(ctx, entity.position);
         var endPoly = FindNearestPolygon(ctx, position);
 
-        var path = AStarPolygon(ctx, startPoly, endPoly, entity.position, position);
+        DbVector2 realPos = position;
+
+        if (!PointInPolygon(ctx, endPoly, position))
+        {
+            realPos = GetClosestEdgePoint(ctx, endPoly, position);
+        }
+
+
+
+        var path = AStarPolygon(ctx, startPoly, endPoly, entity.position, realPos);
 
         // Clear old path and insert new one
         ctx.Db.path.entity_id.Delete(entity.entity_id);
@@ -559,9 +568,9 @@ public static partial class Module
         NavMeshVertex v4 = new(new(-200, 700));   // Top-right
 
         // Bottom horizontal rectangle
-        NavMeshVertex v5 = new(new(-200, -200));  // Top-left
+        NavMeshVertex v5 = new(new(-200, 200));  // Top-left
         NavMeshVertex v6 = new(new(200, -700));   // Bottom-right
-        NavMeshVertex v7 = new(new(200, -200));   // Top-right
+        NavMeshVertex v7 = new(new(200, 200));   // Top-right
         //and uses v3
 
         // Right vertical rectangle

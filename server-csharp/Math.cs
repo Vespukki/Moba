@@ -1,4 +1,5 @@
 ﻿using SpacetimeDB;
+using System.Numerics;
 
 
 // This allows us to store 2D points in tables.
@@ -12,6 +13,13 @@ public partial struct DbVector2
     {
         this.x = x;
         this.y = y;
+    }
+
+    public DbVector2 MovedTowards(DbVector2 targetPosition, float amount)
+    {
+        DbVector2 direction = (targetPosition - this).Normalized();
+        DbVector2 final = this + direction * amount;
+        return final;
     }
 
     public DbVector2 Normalized()
@@ -52,6 +60,12 @@ public partial struct DbVector2
     {
         return new DbVector2(a.x * b, a.y * b);
     }
+
+    public static DbVector2 operator *(float a, DbVector2 b)
+    {
+        return new DbVector2(b.x * a, b.y * a);
+    }
+
     public static DbVector2 operator /(DbVector2 a, float b)
     {
         return new DbVector2(a.x / b, a.y / b);
