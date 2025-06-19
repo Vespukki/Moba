@@ -1,6 +1,6 @@
-using UnityEngine;
 using SpacetimeDB.Types;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class NavmeshVisualizer : MonoBehaviour
 {
@@ -24,23 +24,13 @@ public class NavmeshVisualizer : MonoBehaviour
 
     public static Dictionary<uint, NavMeshPolygon> polygons = new();
 
+    public static Dictionary<uint, Path> paths = new();
+
+    public static EntityController trackedEntity;
+
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.cyan;
-
-
-       /* foreach (var vertex in vertices.Values)
-        {
-            Gizmos.DrawSphere(new(vertex.Position.X, 0, vertex.Position.Y), 5f);
-        }
-
-        foreach (var edge in edges.Values)
-        {
-            NavMeshVertex from = vertices[edge.FromVertexId];
-            NavMeshVertex to = vertices[edge.ToVertexId];
-
-            Gizmos.DrawLine(new(from.Position.X, 0, from.Position.Y), new(to.Position.X, 0, to.Position.Y));
-        }*/
 
         foreach (var polygon in polygons.Values)
         {
@@ -61,6 +51,24 @@ public class NavmeshVisualizer : MonoBehaviour
             }
 
             Gizmos.DrawCube(new(polygon.Centroid.X, 0, polygon.Centroid.Y), Vector3.one * 10f);
+        }
+
+
+        Path lastPath = null;
+        foreach (var path in paths.Values)
+        {
+            Gizmos.DrawSphere(new(path.Position.X, 0, path.Position.Y), 10f);
+
+            if (lastPath != null)
+            {
+                Gizmos.DrawLine(new(path.Position.X, 0, path.Position.Y), new(lastPath.Position.X, 0, lastPath.Position.Y));
+            }
+            else if(trackedEntity != null)
+            {
+                Gizmos.DrawLine(new(path.Position.X, 0, path.Position.Y), new(trackedEntity.transform.position.x, 0, trackedEntity.transform.position.z));
+            }
+
+                lastPath = path;
         }
     }
 

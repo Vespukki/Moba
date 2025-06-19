@@ -99,12 +99,28 @@ public class GameManager : MonoBehaviour
 
         conn.Db.NavMeshPolygon.OnInsert += NavmeshPolygonOnInsert;
 
+        conn.Db.Path.OnInsert += PathOnInsert;
+        conn.Db.Path.OnDelete += PathOnDelete;
+
         OnConnected?.Invoke();
 
         // Request all tables
         Conn.SubscriptionBuilder()
             .OnApplied(HandleSubscriptionApplied)
             .SubscribeToAllTables();
+    }
+
+    private void PathOnDelete(EventContext context, Path row)
+    {
+        if (NavmeshVisualizer.paths.TryGetValue(row.PathId, out Path val))
+        {
+            NavmeshVisualizer.paths.Remove(row.PathId);
+        }
+    }
+
+    private void PathOnInsert(EventContext context, Path row)
+    {
+        NavmeshVisualizer.paths.Add(row.PathId, row);
     }
 
     private void NavmeshPolygonOnInsert(EventContext context, NavMeshPolygon row)
@@ -296,7 +312,10 @@ public class GameManager : MonoBehaviour
             Actor actor = ctx.Db.Actor.EntityId.Find(champ.EntityId);
             ActorBaseStats baseStats = ctx.Db.ActorBaseStats.ActorId.Find(actor.ActorId);
 
+
             SpawnChampion(entity, actor, champ, baseStats);
+            NavmeshVisualizer.trackedEntity = championControllers[entity.EntityId];
+
         }
 
         gameInitialized = true;
@@ -334,7 +353,6 @@ public class GameManager : MonoBehaviour
     private void ChampionInstanceOnInsert(EventContext ctx, ChampionInstance champ)
     {
         Debug.Log("Champion instance added");
-
         championInstances.Add(champ.EntityId, champ);
 
         if (gameInitialized)

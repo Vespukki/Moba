@@ -90,43 +90,66 @@ public static partial class Module
         return nearestPolygon;
     }
 
-    public static List<DbVector2> AStarPolygon(ReducerContext ctx, uint startPolygonId, uint goalPolygonId)
+    public class PathNode
     {
-        var openSet = new PriorityQueue<uint, float>();
-        openSet.Enqueue(startPolygonId, 0f);
+        public uint PolygonId;
+        public DbVector2 EntryPoint; // Optimal point where we entered this polygon
+    }
 
-        var cameFrom = new Dictionary<uint, uint>();
-        var gScore = new Dictionary<uint, float> { [startPolygonId] = 0f };
-        var fScore = new Dictionary<uint, float> { [startPolygonId] = HeuristicPolygon(ctx, startPolygonId, goalPolygonId) };
+    public static List<DbVector2> AStarPolygon(ReducerContext ctx, NavMeshPolygon startPoly, NavMeshPolygon goalPoly, DbVector2 startPos, DbVector2 endPos)
+    {
+        var openSet = new PriorityQueue<PathNode, float>();
 
-        // Store edge transitions
-        var edgeTransitions = new Dictionary<uint, NavMeshPolygonEdge>();
+        // Initialize with optimal entry point from start position
+        var startNode = new PathNode
+        {
+            PolygonId = startPoly.polygon_id,
+            EntryPoint = startPos
+        };
+        openSet.Enqueue(startNode, 0f);
+
+        var cameFrom = new Dictionary<uint, PathNode>();
+        var gScore = new Dictionary<uint, float> { [startPoly.polygon_id] = 0f };
+        var fScore = new Dictionary<uint, float> { [startPoly.polygon_id] = HeuristicPolygon(ctx, startPoly.polygon_id, goalPoly.polygon_id) };
+        var bestEntryPoints = new Dictionary<uint, DbVector2> { [startPoly.polygon_id] = startNode.EntryPoint };
 
         while (openSet.Count > 0)
         {
-            uint current = openSet.Dequeue();
+            var current = openSet.Dequeue();
 
-            if (current == goalPolygonId)
-                return ReconstructPathPolygon(ctx, cameFrom, edgeTransitions, current);
+            if (current.PolygonId == goalPoly.polygon_id)
+                return ReconstructPath(ctx, cameFrom, current, startPoly.polygon_id, endPos);
 
             foreach (var edge in ctx.Db.nav_mesh_polygon_edge.Iter()
-                     .Where(e => e.from_polygon_id == current || e.to_polygon_id == current))
+                     .Where(e => e.from_polygon_id == current.PolygonId || e.to_polygon_id == current.PolygonId))
             {
-                uint neighbor = edge.from_polygon_id == current ? edge.to_polygon_id : edge.from_polygon_id;
+                uint neighbor = edge.from_polygon_id == current.PolygonId ? edge.to_polygon_id : edge.from_polygon_id;
 
-                // Calculate actual edge midpoint as transition cost
-                float edgeLength = (edge.shared_vertex_a - edge.shared_vertex_b).Magnitude();
-                float tentativeGScore = gScore[current] + edgeLength;
+                // Find the optimal point along this edge
+                DbVector2 edgePoint = FindOptimalEdgePoint(
+                    current.EntryPoint,
+                    edge.shared_vertex_a,
+                    edge.shared_vertex_b,
+                    endPos
+                );
 
-                if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor])
+                // Calculate exact distance through this point
+                float segmentLength = (current.EntryPoint - edgePoint).Magnitude();
+                float tentativeGScore = gScore[current.PolygonId] + segmentLength;
+
+                if (!gScore.ContainsKey(neighbor) || tentativeGScore < gScore[neighbor] ||
+                    !bestEntryPoints.ContainsKey(neighbor))
                 {
                     cameFrom[neighbor] = current;
-                    edgeTransitions[neighbor] = edge;
+                    bestEntryPoints[neighbor] = edgePoint;
                     gScore[neighbor] = tentativeGScore;
-                    fScore[neighbor] = tentativeGScore + HeuristicPolygon(ctx, neighbor, goalPolygonId);
+                    fScore[neighbor] = tentativeGScore + HeuristicPolygon(ctx, neighbor, goalPoly.polygon_id);
 
-                    if (!openSet.UnorderedItems.Any(item => item.Element == neighbor))
-                        openSet.Enqueue(neighbor, fScore[neighbor]);
+                    openSet.Enqueue(new PathNode
+                    {
+                        PolygonId = neighbor,
+                        EntryPoint = edgePoint
+                    }, fScore[neighbor]);
                 }
             }
         }
@@ -134,40 +157,83 @@ public static partial class Module
         return new List<DbVector2>();
     }
 
-    public static List<DbVector2> ReconstructPathPolygon(
-    ReducerContext ctx,
-    Dictionary<uint, uint> cameFrom,
-    Dictionary<uint, NavMeshPolygonEdge> edgeTransitions,
-    uint current)
+    private static DbVector2 FindOptimalEdgePoint(DbVector2 fromPoint, DbVector2 edgeA, DbVector2 edgeB, DbVector2 target)
     {
-        var path = new List<DbVector2>();
-        var polygonPath = new Stack<uint>();
+        // This finds the point along the edge that creates the straightest path to target
+        // while still being on the edge
 
-        // Reconstruct polygon path
-        while (cameFrom.ContainsKey(current))
+        // First check if we can "see" the target directly through the edge
+        if (LineSegmentsIntersect(fromPoint, target, edgeA, edgeB))
         {
-            polygonPath.Push(current);
-            current = cameFrom[current];
+            var intersection = GetLineIntersection(fromPoint, target, edgeA, edgeB);
+            return intersection;
         }
-        polygonPath.Push(current);
 
-        // Convert polygon path to edge points
-        if (polygonPath.Count > 1)
+        // Otherwise find the edge point that minimizes the total path length
+        float minCost = float.MaxValue;
+        DbVector2 bestPoint = (edgeA + edgeB) * 0.5f; // Default to midpoint
+
+        // Sample several points along the edge
+        for (float t = 0; t <= 1; t += 0.02f)
         {
-            uint prevPoly = polygonPath.Pop();
-            while (polygonPath.Count > 0)
+            DbVector2 candidate = edgeA + (edgeB - edgeA) * t;
+            float cost = (fromPoint - candidate).Magnitude() + (candidate - target).Magnitude();
+
+            if (cost < minCost)
             {
-                uint nextPoly = polygonPath.Pop();
-                var edge = edgeTransitions[nextPoly];
-
-                // Use the midpoint of the shared edge
-                var edgeMid = (edge.shared_vertex_a + edge.shared_vertex_b) * 0.5f;
-                path.Add(edgeMid);
-
-                prevPoly = nextPoly;
+                minCost = cost;
+                bestPoint = candidate;
             }
         }
 
+        return bestPoint;
+    }
+
+    private static bool LineSegmentsIntersect(DbVector2 a1, DbVector2 a2, DbVector2 b1, DbVector2 b2)
+    {
+        // Implementation of line segment intersection check
+        float d = (a2.x - a1.x) * (b2.y - b1.y) - (a2.y - a1.y) * (b2.x - b1.x);
+        if (d == 0) return false;
+
+        float t = ((b1.x - a1.x) * (b2.y - b1.y) - (b1.y - a1.y) * (b2.x - b1.x)) / d;
+        float u = ((b1.x - a1.x) * (a2.y - a1.y) - (b1.y - a1.y) * (a2.x - a1.x)) / d;
+
+        return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+    }
+
+    private static DbVector2 GetLineIntersection(DbVector2 a1, DbVector2 a2, DbVector2 b1, DbVector2 b2)
+    {
+        // Calculate intersection point of two lines
+        float d = (a2.x - a1.x) * (b2.y - b1.y) - (a2.y - a1.y) * (b2.x - b1.x);
+        float t = ((b1.x - a1.x) * (b2.y - b1.y) - (b1.y - a1.y) * (b2.x - b1.x)) / d;
+        return new DbVector2(
+            a1.x + t * (a2.x - a1.x),
+            a1.y + t * (a2.y - a1.y)
+        );
+    }
+
+    public static List<DbVector2> ReconstructPath(
+     ReducerContext ctx,
+     Dictionary<uint, PathNode> cameFrom,
+     PathNode endNode,
+     uint startPolygonId,
+     DbVector2 endPos)
+    {
+        var path = new List<DbVector2>();
+        var current = endNode;
+
+        // Add final position
+        path.Add(endPos);
+
+        // Add optimal entry points in reverse order
+        while (current.PolygonId != startPolygonId && cameFrom.ContainsKey(current.PolygonId))
+        {
+            path.Add(current.EntryPoint);
+            current = cameFrom[current.PolygonId];
+        }
+
+        // Add start position
+        path.Reverse();
         return path;
     }
 
@@ -242,30 +308,17 @@ public static partial class Module
         var startPoly = FindNearestPolygon(ctx, entity.position);
         var endPoly = FindNearestPolygon(ctx, position);
 
-        var edgePath = AStarPolygon(ctx, startPoly.polygon_id, endPoly.polygon_id);
-
-        List<DbVector2> finalPath = new();
-
-        // Add start position
-        finalPath.Add(entity.position);
-
-      
-        // Add all edge points
-        finalPath.AddRange(edgePath);
-
-
-        // Add final position
-        finalPath.Add(position);
+        var path = AStarPolygon(ctx, startPoly, endPoly, entity.position, position);
 
         // Clear old path and insert new one
         ctx.Db.path.entity_id.Delete(entity.entity_id);
 
-        for (int i = 0; i < finalPath.Count; i++)
+        for (int i = 0; i < path.Count; i++)
         {
             ctx.Db.path.Insert(new Path
             {
                 entity_id = entity.entity_id,
-                position = finalPath[i],
+                position = path[i],
                 order = (uint)i
             });
         }
