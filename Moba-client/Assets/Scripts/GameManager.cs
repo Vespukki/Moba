@@ -93,10 +93,6 @@ public class GameManager : MonoBehaviour
         conn.Db.Ability.OnInsert += AbilityOnInsert;
         conn.Db.Ability.OnUpdate += AbilityOnUpdate;
 
-        conn.Db.NavMeshVertex.OnInsert += NavmeshVertexOnInsert;
-
-        conn.Db.NavMeshEdge.OnInsert += NavmeshEdgeOnInsert;
-
         conn.Db.NavMeshPolygon.OnInsert += NavmeshPolygonOnInsert;
 
         conn.Db.Path.OnInsert += PathOnInsert;
@@ -128,15 +124,6 @@ public class GameManager : MonoBehaviour
         NavmeshVisualizer.polygons.Add(row.PolygonId, row);
     }
 
-    private void NavmeshEdgeOnInsert(EventContext context, NavMeshEdge row)
-    {
-        NavmeshVisualizer.edges.Add(row.EdgeId, row);
-    }
-
-    private void NavmeshVertexOnInsert(EventContext context, NavMeshVertex row)
-    {
-        NavmeshVisualizer.vertices.Add(row.VertexId, row);
-    }
 
     private void AbilityOnUpdate(EventContext context, Ability oldRow, Ability newRow)
     {

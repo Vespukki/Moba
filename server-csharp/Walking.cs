@@ -23,36 +23,18 @@ public static partial class Module
         public bool remove_other_actions;
     }
 
-    [Table(Name = "nav_mesh_vertex", Public = true)]
-    public partial struct NavMeshVertex(DbVector2 position)
-    {
-        [PrimaryKey, AutoInc]
-        public uint vertex_id;
-
-        public DbVector2 position = position;
-    }
-
-    [Table(Name = "nav_mesh_edge", Public = true)]
-    public partial struct NavMeshEdge(uint from_id, uint to_id)
-    {
-        [PrimaryKey, AutoInc]
-        public uint edge_id;
-
-        public uint from_vertex_id = from_id;
-        public uint to_vertex_id = to_id;
-    }
-
     [Table(Name = "nav_mesh_polygon", Public = true)]
-    public partial struct NavMeshPolygon(List<uint> vertex_ids, DbVector2 centroid)
+    public partial struct NavMeshPolygon(List<DbVector2> vertices, DbVector2 centroid, uint radius)
     {
         [PrimaryKey, AutoInc]
         public uint polygon_id;
 
-        // Let's store a list of vertex ids that define the polygon
-        public List<uint> vertex_ids = vertex_ids;
+        public List<DbVector2> vertices = vertices;
 
-        // Optionally precompute centroid
         public DbVector2 centroid = centroid;
+
+        [SpacetimeDB.Index.BTree]
+        public uint radius = radius;
     }
 
     [Table(Name = "nav_mesh_polygon_edge", Public = true)]
@@ -69,12 +51,12 @@ public static partial class Module
         public DbVector2 shared_vertex_b;
     }
 
-    public static NavMeshPolygon FindNearestPolygon(ReducerContext ctx, DbVector2 position)
+    public static NavMeshPolygon FindNearestPolygon(ReducerContext ctx, DbVector2 position, uint radius)
     {
         NavMeshPolygon nearestPolygon = default;
         float closestDistance = float.MaxValue;
 
-        foreach (var polygon in ctx.Db.nav_mesh_polygon.Iter())
+        foreach (var polygon in ctx.Db.nav_mesh_polygon.radius.Filter(radius))
         {
             if (PointInPolygon(ctx, polygon, position))
                 return polygon; // Best case: inside polygon.
@@ -96,7 +78,7 @@ public static partial class Module
         public DbVector2 EntryPoint; // Optimal point where we entered this polygon
     }
 
-    public static List<DbVector2> AStarPolygon(ReducerContext ctx, NavMeshPolygon startPoly, NavMeshPolygon goalPoly, DbVector2 startPos, DbVector2 endPos)
+    public static List<DbVector2> AStarPolygon(ReducerContext ctx, NavMeshPolygon startPoly, NavMeshPolygon goalPoly, DbVector2 startPos, DbVector2 endPos, uint radius)
     {
         var openSet = new PriorityQueue<PathNode, float>();
 
@@ -239,7 +221,7 @@ public static partial class Module
 
     public static bool PointInPolygon(ReducerContext ctx, NavMeshPolygon polygon, DbVector2 point)
     {
-        var vertices = polygon.vertex_ids.Select(id => ctx.Db.nav_mesh_vertex.vertex_id.Find(id).Value.position).ToList();
+        var vertices = polygon.vertices;//vertex_ids.Select(id => ctx.Db.nav_mesh_vertex.vertex_id.Find(id).Value.position).ToList();
 
         int crossings = 0;
         for (int i = 0; i < vertices.Count; i++)
@@ -303,10 +285,10 @@ public static partial class Module
     /// Creates path from entities position to the given position
     /// </summary>
     [Reducer]
-    public static void CreatePath(ReducerContext ctx, Entity entity, DbVector2 position)
+    public static void CreatePath(ReducerContext ctx, Entity entity, DbVector2 position, uint radius)
     {
-        var startPoly = FindNearestPolygon(ctx, entity.position);
-        var endPoly = FindNearestPolygon(ctx, position);
+        var startPoly = FindNearestPolygon(ctx, entity.position, radius);
+        var endPoly = FindNearestPolygon(ctx, position, radius);
 
         DbVector2 realPos = position;
 
@@ -317,7 +299,7 @@ public static partial class Module
 
 
 
-        var path = AStarPolygon(ctx, startPoly, endPoly, entity.position, realPos);
+        var path = AStarPolygon(ctx, startPoly, endPoly, entity.position, realPos,radius );
 
         // Clear old path and insert new one
         ctx.Db.path.entity_id.Delete(entity.entity_id);
@@ -335,9 +317,9 @@ public static partial class Module
 
     private static DbVector2 GetClosestEdgePoint(ReducerContext ctx, NavMeshPolygon poly, DbVector2 point)
     {
-        var vertices = poly.vertex_ids
-            .Select(id => ctx.Db.nav_mesh_vertex.vertex_id.Find(id).Value.position)
-            .ToList();
+        var vertices = poly.vertices;
+            //.Select(id => ctx.Db.nav_mesh_vertex.vertex_id.Find(id).Value.position)
+            //.ToList();
 
         DbVector2 closestPoint = default;
         float closestDistance = float.MaxValue;
@@ -390,7 +372,7 @@ public static partial class Module
         if (entity.busy) return;
 
         ctx.Db.path.entity_id.Delete(entity.entity_id); // THIS PART IS TEMP
-        CreatePath(ctx, entity, position);
+        CreatePath(ctx, entity, position, 35);//TEMP RADIUS
 
         ctx.Db.set_walk_target_timer.entity_id.Delete(entityId);
 
@@ -539,110 +521,137 @@ public static partial class Module
         }
     }
 
-    public static NavMeshVertex FindNearestNode(ReducerContext ctx, DbVector2 position)
+
+    public static List<DbVector2> GetShrunkenVertices(List<DbVector2> tempVertices, DbVector2 centroid, float amount)
     {
-        NavMeshVertex nearestNode = default;
-        float closestDistance = float.MaxValue;
-
-        foreach (var node in ctx.Db.nav_mesh_vertex.Iter())
+        var vertices = new List<DbVector2>();
+        foreach (var vertex in tempVertices)
         {
-            float distance = (node.position - position).Magnitude();
-            if (distance < closestDistance)
-            {
-                closestDistance = distance;
-                nearestNode = node;
-            }
+            vertices.Add(vertex.MovedTowards(centroid, amount));
         }
-
-        return nearestNode;
+        return vertices;
     }
 
     [Reducer]
-    public static void GenerateNavmesh(ReducerContext ctx)
+    public static void GenerateNavmesh(ReducerContext ctx, uint radius)
     {
-        // Define vertices for our U-shape (3 rectangles forming a U)
-        // Left vertical rectangle
-        NavMeshVertex v1 = new(new(-700, 700));   // Top-left
-        NavMeshVertex v2 = new(new(-700, -700));  // Bottom-left
-        NavMeshVertex v3 = new(new(-200, -700));  // Bottom-right
-        NavMeshVertex v4 = new(new(-200, 700));   // Top-right
+        // Define vertices for our U-shape (5 rectangles forming a U)
+        // Left vertical rectangle (top part)
+        DbVector2 v1 = new(-700 + radius, 700 - radius);   // top left
+        DbVector2 v2 = new(-700 + radius, 200);            // bottom left
+        DbVector2 v3 = new(-200- radius, 200 - radius);                     // bottom right
+        DbVector2 v4 = new(-200 - radius, 700 - radius);   // top right
+
+        // Left vertical rectangle (bottom part)
+        DbVector2 v6 = new(-700 + radius, -700 + radius);  // bottom left
+        DbVector2 v7 = new(-200, -700 + radius);           // bottom right
 
         // Bottom horizontal rectangle
-        NavMeshVertex v5 = new(new(-200, 200));  // Top-left
-        NavMeshVertex v6 = new(new(200, -700));   // Bottom-right
-        NavMeshVertex v7 = new(new(200, 200));   // Top-right
-        //and uses v3
+        DbVector2 v11 = new(200, -700 + radius);           // bottom right
+        DbVector2 v12 = new(200 + radius, 200 - radius);   // top right
 
-        // Right vertical rectangle
-        NavMeshVertex v8 = new(new(200, 700));    // Top-left
-        NavMeshVertex v9 = new(new(700, -700));  // Bottom-right
-        NavMeshVertex v10 = new(new(700, 700));   // Top-right
-        //and uses v6
+        // Right vertical rectangle (bottom part)
+        DbVector2 v15 = new(700 - radius, -700 + radius);  // bottom right
+        DbVector2 v16 = new(700 - radius, 200);            // top right
 
-        // Insert all vertices
-        v1 = ctx.Db.nav_mesh_vertex.Insert(v1);
-        v2 = ctx.Db.nav_mesh_vertex.Insert(v2);
-        v3 = ctx.Db.nav_mesh_vertex.Insert(v3);
-        v4 = ctx.Db.nav_mesh_vertex.Insert(v4);
-        
-        v5 = ctx.Db.nav_mesh_vertex.Insert(v5);
-        v6 = ctx.Db.nav_mesh_vertex.Insert(v6);
-        v7 = ctx.Db.nav_mesh_vertex.Insert(v7);
-
-        v8 = ctx.Db.nav_mesh_vertex.Insert(v8);
-        v9 = ctx.Db.nav_mesh_vertex.Insert(v9);
-        v10 = ctx.Db.nav_mesh_vertex.Insert(v10);
+        // Right vertical rectangle (top part)
+        DbVector2 v19 = new(700 - radius, 700 - radius);   // top right
+        DbVector2 v20 = new(200 + radius, 700 - radius);            // top left
 
         // Create polygons with their vertices and centroids
-        // Left vertical rectangle
-        var leftVertices = new List<uint> { v1.vertex_id, v2.vertex_id, v3.vertex_id, v4.vertex_id };
-        var leftCentroid = CalculateCentroid(new List<DbVector2> { v1.position, v2.position, v3.position, v4.position });
-        var leftPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(leftVertices, leftCentroid));
+        // Left top vertical rectangle
+        var leftTopVertices = new List<DbVector2> { v1, v2, v3, v4 };
+        var leftTopCentroid = CalculateCentroid(leftTopVertices);
+        var leftTopPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(leftTopVertices, leftTopCentroid, radius));
+
+        // Left bottom vertical rectangle
+        var leftBottomVertices = new List<DbVector2> { v2, v6, v7, v3 };
+        var leftBottomCentroid = CalculateCentroid(leftBottomVertices);
+        var leftBottomPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(leftBottomVertices, leftBottomCentroid, radius));
 
         // Bottom horizontal rectangle
-        var bottomVertices = new List<uint> { v5.vertex_id, v3.vertex_id, v6.vertex_id, v7.vertex_id };
-        var bottomCentroid = CalculateCentroid(new List<DbVector2> { v5.position, v3.position, v6.position, v7.position });
-        var bottomPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(bottomVertices, bottomCentroid));
+        var bottomVertices = new List<DbVector2> { v3, v7, v11, v12 };
+        var bottomCentroid = CalculateCentroid(bottomVertices);
+        var bottomPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(bottomVertices, bottomCentroid, radius));
 
-        // Right vertical rectangle
-        var rightVertices = new List<uint> { v8.vertex_id, v6.vertex_id, v9.vertex_id, v10.vertex_id };
-        var rightCentroid = CalculateCentroid(new List<DbVector2> { v8.position, v6.position, v9.position, v10.position });
-        var rightPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(rightVertices, rightCentroid));
+        // Right bottom vertical rectangle
+        var rightBottomVertices = new List<DbVector2> { v12, v11, v15, v16 };
+        var rightBottomCentroid = CalculateCentroid(rightBottomVertices);
+        var rightBottomPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(rightBottomVertices, rightBottomCentroid, radius));
+
+        // Right top vertical rectangle
+        var rightTopVertices = new List<DbVector2> { v12, v16, v19, v20 };
+        var rightTopCentroid = CalculateCentroid(rightTopVertices);
+        var rightTopPoly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(rightTopVertices, rightTopCentroid, radius));
 
         // Create connections between polygons
-        // Left connects to Bottom
+        // Left top connects to Left bottom
         ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
         {
-            from_polygon_id = leftPoly.polygon_id,
-            to_polygon_id = bottomPoly.polygon_id,
-            shared_vertex_a = v3.position,  // Bottom-right of left rectangle
-            shared_vertex_b = v5.position   // Bottom-left of bottom rectangle
+            from_polygon_id = leftTopPoly.polygon_id,
+            to_polygon_id = leftBottomPoly.polygon_id,
+            shared_vertex_a = v2,  // bottom left of top rectangle
+            shared_vertex_b = v3   // bottom right of top rectangle (top of bottom rectangle)
         });
 
-        // Bottom connects to Right
+        // Left bottom connects to Bottom
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = leftBottomPoly.polygon_id,
+            to_polygon_id = bottomPoly.polygon_id,
+            shared_vertex_a = v7,  // bottom right of left rectangle
+            shared_vertex_b = v3   // top right of left rectangle (left of bottom rectangle)
+        });
+
+        // Bottom connects to Right bottom
         ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
         {
             from_polygon_id = bottomPoly.polygon_id,
-            to_polygon_id = rightPoly.polygon_id,
-            shared_vertex_a = v6.position,  // Bottom-right of bottom rectangle
-            shared_vertex_b = v7.position  // Bottom-left of right rectangle
+            to_polygon_id = rightBottomPoly.polygon_id,
+            shared_vertex_a = v11,  // bottom right of bottom rectangle
+            shared_vertex_b = v12   // top right of bottom rectangle (bottom of right rectangle)
+        });
+
+        // Right bottom connects to Right top
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = rightBottomPoly.polygon_id,
+            to_polygon_id = rightTopPoly.polygon_id,
+            shared_vertex_a = v16,  // top right of bottom rectangle
+            shared_vertex_b = v12   // top left of bottom rectangle (bottom of top rectangle)
         });
 
         // Create reverse connections for bidirectional movement
         ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
         {
-            from_polygon_id = bottomPoly.polygon_id,
-            to_polygon_id = leftPoly.polygon_id,
-            shared_vertex_a = v3.position,
-            shared_vertex_b = v5.position
+            from_polygon_id = leftBottomPoly.polygon_id,
+            to_polygon_id = leftTopPoly.polygon_id,
+            shared_vertex_a = v2,
+            shared_vertex_b = v3
         });
 
         ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
         {
-            from_polygon_id = rightPoly.polygon_id,
+            from_polygon_id = bottomPoly.polygon_id,
+            to_polygon_id = leftBottomPoly.polygon_id,
+            shared_vertex_a = v7,
+            shared_vertex_b = v3
+        });
+
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = rightBottomPoly.polygon_id,
             to_polygon_id = bottomPoly.polygon_id,
-            shared_vertex_a = v6.position,
-            shared_vertex_b = v7.position
+            shared_vertex_a = v11,
+            shared_vertex_b = v12
+        });
+
+        ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+        {
+            from_polygon_id = rightTopPoly.polygon_id,
+            to_polygon_id = rightBottomPoly.polygon_id,
+            shared_vertex_a = v16,
+            shared_vertex_b = v12
         });
     }
 

@@ -99,7 +99,8 @@ public static partial class Module
     [Reducer(ReducerKind.Init)]
     public static void Init(ReducerContext ctx)
     {
-        GenerateNavmesh(ctx);
+        GenerateNavmesh(ctx, 35);
+        GenerateNavmesh(ctx, 0);
 
         lastTimestamp = ctx.Timestamp;
 

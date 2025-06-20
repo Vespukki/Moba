@@ -19,9 +19,6 @@ public class NavmeshVisualizer : MonoBehaviour
         }
     }
 
-    public static Dictionary<uint,NavMeshVertex> vertices = new();
-    public static Dictionary<uint, NavMeshEdge> edges = new();
-
     public static Dictionary<uint, NavMeshPolygon> polygons = new();
 
     public static Dictionary<uint, Path> paths = new();
@@ -34,17 +31,26 @@ public class NavmeshVisualizer : MonoBehaviour
 
         foreach (var polygon in polygons.Values)
         {
-            List<NavMeshVertex> tempVertices = new();
-
-            foreach (var vertexId in polygon.VertexIds)
+            if (polygon.Radius < 5)
             {
-                NavMeshVertex vertex = vertices[vertexId];
+                Gizmos.color = Color.red;
+            }
+            else
+            {
+                Gizmos.color = Color.cyan;
+            }
 
-                Gizmos.DrawSphere(new(vertex.Position.X, 0, vertex.Position.Y), 5f);
+            List<DbVector2> tempVertices = new();
+
+            foreach (DbVector2 vertex in polygon.Vertices)
+            {
+                //NavMeshVertex vertex = vertices[vertexId];
+
+                Gizmos.DrawSphere(new(vertex.X, 0, vertex.Y), 5f);
 
                 foreach (var otherVertex in tempVertices)
                 {
-                    Gizmos.DrawLine(new(vertex.Position.X, 0, vertex.Position.Y), new(otherVertex.Position.X, 0, otherVertex.Position.Y));
+                    Gizmos.DrawLine(new(vertex.X, 0, vertex.Y), new(otherVertex.X, 0, otherVertex.Y));
                 }
 
                 tempVertices.Add(vertex);
@@ -53,6 +59,7 @@ public class NavmeshVisualizer : MonoBehaviour
             Gizmos.DrawCube(new(polygon.Centroid.X, 0, polygon.Centroid.Y), Vector3.one * 10f);
         }
 
+        Gizmos.color = Color.green;
 
         Path lastPath = null;
         foreach (var path in paths.Values)
