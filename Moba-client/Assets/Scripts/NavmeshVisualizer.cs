@@ -5,7 +5,11 @@ using UnityEngine;
 public class NavmeshVisualizer : MonoBehaviour
 {
     public static NavmeshVisualizer instance;
+    public List<Vector3> vertices = new();
+    public List<int> indices = new();
 
+
+    public bool drawLines = false;
     private void Awake()
     {
         if (instance == null)
@@ -19,7 +23,10 @@ public class NavmeshVisualizer : MonoBehaviour
         }
     }
 
+    public List<uint> highlightPolys = new();
+
     public static Dictionary<uint, NavMeshPolygon> polygons = new();
+    public static Dictionary<uint, NavMeshPolygonEdge> edges = new();
 
     public static Dictionary<uint, Path> paths = new();
 
@@ -27,11 +34,13 @@ public class NavmeshVisualizer : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (!drawLines) return;
+
         Gizmos.color = Color.cyan;
 
         foreach (var polygon in polygons.Values)
         {
-            if (polygon.Radius < 5)
+            if (highlightPolys.Contains(polygon.PolygonId))
             {
                 Gizmos.color = Color.red;
             }
@@ -57,6 +66,13 @@ public class NavmeshVisualizer : MonoBehaviour
             }
 
             Gizmos.DrawCube(new(polygon.Centroid.X, 0, polygon.Centroid.Y), Vector3.one * 10f);
+        }
+
+        foreach (var edge in edges.Values)
+        {
+            Vector3 a = new(edge.SharedVertexA.X, 0, edge.SharedVertexA.Y);
+            Vector3 b = new(edge.SharedVertexB.X, 0, edge.SharedVertexB.Y);
+            Gizmos.DrawSphere(((a + b) / 2), 10f);
         }
 
         Gizmos.color = Color.green;

@@ -1,5 +1,7 @@
 using SpacetimeDB;
+using System.Reflection;
 using System.Xml.Linq;
+using static System.Net.Mime.MediaTypeNames;
 
 public static partial class Module
 {
@@ -99,8 +101,11 @@ public static partial class Module
     [Reducer(ReducerKind.Init)]
     public static void Init(ReducerContext ctx)
     {
-        GenerateNavmesh(ctx, 35);
-        GenerateNavmesh(ctx, 0);
+        string filePath = System.IO.Path.GetFullPath("./navmesh/bakedNavmesh.bytes");//(exeDirectory, "navmesh", "bakedNavmesh.bytes");
+        Log.Info(filePath);
+        
+        //GenerateNavmesh(ctx, 35);
+        //GenerateNavmesh(ctx, 0);
 
         lastTimestamp = ctx.Timestamp;
 

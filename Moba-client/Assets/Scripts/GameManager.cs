@@ -98,12 +98,19 @@ public class GameManager : MonoBehaviour
         conn.Db.Path.OnInsert += PathOnInsert;
         conn.Db.Path.OnDelete += PathOnDelete;
 
+        conn.Db.NavMeshPolygonEdge.OnInsert += NavMeshPolygonEdgeOnInsert;
+
         OnConnected?.Invoke();
 
         // Request all tables
         Conn.SubscriptionBuilder()
             .OnApplied(HandleSubscriptionApplied)
             .SubscribeToAllTables();
+    }
+
+    private void NavMeshPolygonEdgeOnInsert(EventContext context, NavMeshPolygonEdge row)
+    {
+        NavmeshVisualizer.edges.Add(row.EdgeId, row);
     }
 
     private void PathOnDelete(EventContext context, Path row)

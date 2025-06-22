@@ -247,22 +247,8 @@ public static partial class Module
         if (fromPoly == null || toPoly == null)
             return 0;
 
-        // Find the closest pair of edges between polygons
-        float minDist = float.MaxValue;
-
-        foreach (var edge in ctx.Db.nav_mesh_polygon_edge.Iter()
-                 .Where(e => (e.from_polygon_id == fromPolygonId && e.to_polygon_id == toPolygonId) ||
-                             (e.from_polygon_id == toPolygonId && e.to_polygon_id == fromPolygonId)))
-        {
-            var edgeCenter = (edge.shared_vertex_a + edge.shared_vertex_b) * 0.5f;
-            float dist = (fromPoly.Value.centroid - edgeCenter).Magnitude() +
-                         (toPoly.Value.centroid - edgeCenter).Magnitude();
-
-            if (dist < minDist)
-                minDist = dist;
-        }
-
-        return minDist;
+        // Direct centroid-to-centroid distance as heuristic
+        return (fromPoly.Value.centroid - toPoly.Value.centroid).Magnitude();
     }
 
 
@@ -530,6 +516,103 @@ public static partial class Module
             vertices.Add(vertex.MovedTowards(centroid, amount));
         }
         return vertices;
+    }
+
+
+    [Reducer]
+    public static void GenerateNavmeshFromClient(ReducerContext ctx, List<DbVector2> vertices, List<int> indices, uint radius)
+    {
+        List<KeyValuePair<uint, HashSet<int>>> verticesByPolyId = new();
+
+        for (int i = 0; i < indices.Count; i += 3)
+        {
+            int i1 = indices[i];
+            int i2 = indices[i + 1];
+            int i3 = indices[i + 2];
+
+            DbVector2 v1 = vertices[i1];
+            DbVector2 v2 = vertices[i2];
+            DbVector2 v3 = vertices[i3];
+
+            var polygonVertices = new List<DbVector2> { v1, v2, v3 };
+            var centroid = CalculateCentroid(polygonVertices);
+            var poly = ctx.Db.nav_mesh_polygon.Insert(new NavMeshPolygon(polygonVertices, centroid, radius));
+
+            // Process all three edges of the triangle
+            //ProcessEdge(verticesByPolyId, poly, new() {i1,i2,i3}, new() {v1,v2,v3 }, ctx);
+            verticesByPolyId.Add(new(poly.polygon_id, new() { i1, i2, i3 }));
+        }
+
+        for (int i = 0; i < verticesByPolyId.Count; i++)
+        {
+            var pair = verticesByPolyId[i];
+
+            var tempArray = pair.Value.ToArray();
+            Log.Info($"{pair.Key} has {tempArray[0]} {tempArray[1]} {tempArray[2]}");
+
+            for (int j = 0; j < i; j++)
+            {
+                if (i == j) continue;
+
+                var otherPair = verticesByPolyId[j];
+                List<int> intersection = pair.Value.Intersect(otherPair.Value).ToList();
+
+                Log.Info(intersection.Count.ToString());
+                if (intersection.Count >= 2)
+                {
+                    ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+                    {
+                        from_polygon_id = pair.Key,
+                        to_polygon_id = otherPair.Key,
+                        shared_vertex_a = vertices[intersection[0]],
+                        shared_vertex_b = vertices[intersection[1]]
+                    });
+
+                    Log.Info($"{pair.Key} and {otherPair.Key} intersect at {intersection[0]} and {intersection[1]}");
+                }
+            }
+        }
+    }
+
+    // Helper method to process an edge and create connections between adjacent polygons
+    private static void ProcessEdge(Dictionary<uint, List<int>> verticesByPolyId,NavMeshPolygon currentPoly, List<int> indices, List<DbVector2> vertices,ReducerContext ctx)
+    {
+        foreach (var neighbor in verticesByPolyId)
+        {
+            if (neighbor.Value.Contains(indices[0]) && neighbor.Value.Contains(indices[1]))
+            {
+                // Bottom connects to Right bottom
+                ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+                {
+                    from_polygon_id = currentPoly.polygon_id,
+                    to_polygon_id = neighbor.Key,
+                    shared_vertex_a = vertices[0],  
+                    shared_vertex_b = vertices[1] 
+                });
+            }
+            if (neighbor.Value.Contains(indices[1]) && neighbor.Value.Contains(indices[2]))
+            {
+                // Bottom connects to Right bottom
+                ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+                {
+                    from_polygon_id = currentPoly.polygon_id,
+                    to_polygon_id = neighbor.Key,
+                    shared_vertex_a = vertices[1], 
+                    shared_vertex_b = vertices[2]
+                });
+            }
+            if (neighbor.Value.Contains(indices[2]) && neighbor.Value.Contains(indices[0]))
+            {
+                // Bottom connects to Right bottom
+                ctx.Db.nav_mesh_polygon_edge.Insert(new NavMeshPolygonEdge
+                {
+                    from_polygon_id = currentPoly.polygon_id,
+                    to_polygon_id = neighbor.Key,
+                    shared_vertex_a = vertices[2],
+                    shared_vertex_b = vertices[0]  
+                });
+            }
+        }
     }
 
     [Reducer]
